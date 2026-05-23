@@ -23,8 +23,25 @@
     "projects": "Workspaces",
     "empty": "No requests yet",
     "projectsEmpty": "Import an OpenAPI file to create a workspace",
-    "importOpenApi": "Import OpenAPI",
-    "importing": "Importing…"
+    "importOpenApi": "Import OpenAPI"
+  },
+  "openapiImport": {
+    "title": "Import OpenAPI",
+    "close": "Close",
+    "chooseHint": "Choose how you want to load the OpenAPI specification.",
+    "fromFile": "Import from file",
+    "fromFileHint": ".json, .yaml, or .yml",
+    "fromUrl": "Import from URL",
+    "fromUrlHint": "Fetch the spec over the network",
+    "urlHint": "Enter the URL of an OpenAPI or Swagger document.",
+    "urlLabel": "Spec URL",
+    "urlPlaceholder": "Enter URL…",
+    "invalidUrl": "Invalid URL. Please enter an http or https address.",
+    "load": "Load",
+    "loading": "Loading OpenAPI…",
+    "back": "Back",
+    "usePetstoreExample": "Example: Petstore (OpenAPI 3)",
+    "swagger2Hint": "Note: Swagger 2.0 specs are not supported — OpenAPI 3.x required."
   },
   "export": {
     "open": "Export",

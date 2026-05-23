@@ -23,8 +23,25 @@
     "projects": "Projekträume",
     "empty": "Noch keine Requests",
     "projectsEmpty": "OpenAPI-Datei importieren, um einen Projektraum anzulegen",
-    "importOpenApi": "OpenAPI importieren",
-    "importing": "Importiere…"
+    "importOpenApi": "OpenAPI importieren"
+  },
+  "openapiImport": {
+    "title": "OpenAPI importieren",
+    "close": "Schließen",
+    "chooseHint": "Wähle, wie du die OpenAPI-Spezifikation laden möchtest.",
+    "fromFile": "Aus Datei importieren",
+    "fromFileHint": ".json, .yaml oder .yml",
+    "fromUrl": "Von URL importieren",
+    "fromUrlHint": "Spec direkt aus dem Netz laden",
+    "urlHint": "Gib die URL zu einer OpenAPI- oder Swagger-Datei ein.",
+    "urlLabel": "Spec-URL",
+    "urlPlaceholder": "URL eingeben…",
+    "invalidUrl": "Ungültige URL. Bitte eine http- oder https-Adresse eingeben.",
+    "load": "Laden",
+    "loading": "OpenAPI wird geladen…",
+    "back": "Zurück",
+    "usePetstoreExample": "Beispiel: Petstore (OpenAPI 3)",
+    "swagger2Hint": "Hinweis: Swagger 2.0-Dateien werden nicht unterstützt — OpenAPI 3.x erforderlich."
   },
   "export": {
     "open": "Export",

@@ -58,6 +58,7 @@ pub fn run() {
             environments::save_environment_cmd,
             environments::delete_environment_cmd,
             swagger::import_swagger_file,
+            swagger::import_swagger_from_url,
             vault::save_secure_token,
             vault::delete_secure_token_cmd,
             vault::has_secure_token_cmd,

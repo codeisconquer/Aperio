@@ -1,13 +1,6 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import {
-  ChevronDown,
-  ChevronRight,
-  FileUp,
-  Loader2,
-  Lock,
-  LockOpen,
-} from "lucide-react";
+import { ChevronDown, ChevronRight, FileUp, Lock, LockOpen } from "lucide-react";
 import {
   buildEndpointUrl,
   endpointKey,
@@ -30,8 +23,7 @@ interface ProjectsListProps {
   projects: SwaggerProject[];
   projectsWithTokens: Set<string>;
   selectedEndpointKey: string | null;
-  importing: boolean;
-  onImport: () => void;
+  onOpenImport: () => void;
   onOpenVault: (project: SwaggerProject) => void;
   onEndpointSelect: (project: SwaggerProject, endpoint: SwaggerEndpoint) => void;
 }
@@ -40,8 +32,7 @@ export function ProjectsList({
   projects,
   projectsWithTokens,
   selectedEndpointKey,
-  importing,
-  onImport,
+  onOpenImport,
   onOpenVault,
   onEndpointSelect,
 }: ProjectsListProps) {
@@ -56,16 +47,11 @@ export function ProjectsList({
     <div className="flex flex-col gap-2">
       <button
         type="button"
-        onClick={onImport}
-        disabled={importing}
-        className="inline-flex items-center justify-center gap-2 rounded-md border border-accent/40 bg-accent/10 px-3 py-2 text-xs font-medium text-accent transition-colors hover:bg-accent/20 disabled:cursor-not-allowed disabled:opacity-50"
+        onClick={onOpenImport}
+        className="inline-flex items-center justify-center gap-2 rounded-md border border-accent/40 bg-accent/10 px-3 py-2 text-xs font-medium text-accent transition-colors hover:bg-accent/20"
       >
-        {importing ? (
-          <Loader2 className="size-3.5 animate-spin" aria-hidden />
-        ) : (
-          <FileUp className="size-3.5" aria-hidden />
-        )}
-        {importing ? t("sidebar.importing") : t("sidebar.importOpenApi")}
+        <FileUp className="size-3.5" aria-hidden />
+        {t("sidebar.importOpenApi")}
       </button>
 
       {projects.length === 0 ? (

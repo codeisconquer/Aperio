@@ -22,8 +22,7 @@ interface SidebarProps {
   projects: SwaggerProject[];
   projectsWithTokens: Set<string>;
   selectedEndpointKey: string | null;
-  importingProject: boolean;
-  onImportProject: () => void;
+  onOpenOpenApiImport: () => void;
   onOpenVault: (project: SwaggerProject) => void;
   onEndpointSelect: (
     project: SwaggerProject,
@@ -44,8 +43,7 @@ export function Sidebar({
   projects,
   projectsWithTokens,
   selectedEndpointKey,
-  importingProject,
-  onImportProject,
+  onOpenOpenApiImport,
   onOpenVault,
   onEndpointSelect,
   onWorkspaceImported,
@@ -95,8 +93,7 @@ export function Sidebar({
             projects={projects}
             projectsWithTokens={projectsWithTokens}
             selectedEndpointKey={selectedEndpointKey}
-            importing={importingProject}
-            onImport={onImportProject}
+            onOpenImport={onOpenOpenApiImport}
             onOpenVault={onOpenVault}
             onEndpointSelect={onEndpointSelect}
           />

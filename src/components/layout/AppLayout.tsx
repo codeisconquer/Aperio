@@ -16,7 +16,7 @@ import {
   applyEnvironmentToDraft,
   parseEnvironmentVariables,
 } from "../../lib/substituteVariables";
-import { importSwaggerFile } from "../../lib/swagger";
+import { OpenApiImportModal } from "../sidebar/OpenApiImportModal";
 import { listSecureTokenProjects } from "../../lib/vault";
 import type { HttpResponse } from "../../types/http";
 import type { Environment } from "../../types/environment";
@@ -52,7 +52,7 @@ export function AppLayout() {
   const [selectedEndpointKey, setSelectedEndpointKey] = useState<string | null>(
     null,
   );
-  const [importingProject, setImportingProject] = useState(false);
+  const [openApiImportOpen, setOpenApiImportOpen] = useState(false);
   const [response, setResponse] = useState<HttpResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -195,20 +195,10 @@ export function AppLayout() {
     [],
   );
 
-  const handleImportProject = useCallback(async () => {
-    setImportingProject(true);
+  const handleOpenApiImported = useCallback((project: SwaggerProject) => {
+    setProjects((prev) => [project, ...prev]);
+    setOpenApiImportOpen(false);
     setError(null);
-    try {
-      const project = await importSwaggerFile();
-      setProjects((prev) => [project, ...prev]);
-    } catch (err) {
-      const message = err instanceof Error ? err.message : String(err);
-      if (message !== "Import cancelled") {
-        setError(message);
-      }
-    } finally {
-      setImportingProject(false);
-    }
   }, []);
 
   const handleCurlImported = useCallback(() => {
@@ -259,8 +249,7 @@ export function AppLayout() {
           projects={projects}
           projectsWithTokens={projectsWithTokens}
           selectedEndpointKey={selectedEndpointKey}
-          importingProject={importingProject}
-          onImportProject={handleImportProject}
+          onOpenOpenApiImport={() => setOpenApiImportOpen(true)}
           onOpenVault={setVaultProject}
           onEndpointSelect={handleEndpointSelect}
           onWorkspaceImported={handleWorkspaceImported}
@@ -281,6 +270,13 @@ export function AppLayout() {
           onClose={() => setEnvironmentModalTarget(undefined)}
           onSaved={handleEnvironmentSaved}
           onDeleted={handleEnvironmentDeleted}
+        />
+      )}
+
+      {openApiImportOpen && (
+        <OpenApiImportModal
+          onClose={() => setOpenApiImportOpen(false)}
+          onImported={handleOpenApiImported}
         />
       )}
 

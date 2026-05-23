@@ -39,6 +39,20 @@ export async function installTauriMock(page: Page): Promise<void> {
         const body = dataMatch ? dataMatch[1] : null;
         return { method, url, headers, body };
       },
+      import_swagger_from_url: () => ({
+        id: "mock-project-url",
+        title: "Pet Store (mock)",
+        version: "1.0.7",
+        base_url: "https://petstore.swagger.io/v2",
+        endpoints: [
+          {
+            method: "GET",
+            path: "/pet/findByStatus",
+            summary: "Finds Pets by status",
+            description: null,
+          },
+        ],
+      }),
       send_request: (args) => {
         const payload = (args.payload ?? args) as Record<string, unknown>;
         return {
