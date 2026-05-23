@@ -22,26 +22,29 @@
     "history": "History",
     "projects": "Workspaces",
     "empty": "No requests yet",
-    "projectsEmpty": "Import an OpenAPI file to create a workspace",
-    "importOpenApi": "Import OpenAPI"
+    "projectsEmpty": "Import a workspace to load endpoints from OpenAPI, Serverless, or Postman",
+    "importWorkspace": "Import workspace"
   },
-  "openapiImport": {
-    "title": "Import OpenAPI",
+  "workspaceImport": {
+    "title": "Import workspace",
     "close": "Close",
-    "chooseHint": "Choose how you want to load the OpenAPI specification.",
+    "chooseHint": "Import an API specification as a workspace. Supported file formats:",
+    "formatOpenApi": "OpenAPI 3.x — *.json, *.yaml, *.yml",
+    "formatServerless": "Serverless Framework — serverless.yml",
+    "formatPostman": "Postman Collection v2.1 — *.json",
     "fromFile": "Import from file",
-    "fromFileHint": ".json, .yaml, or .yml",
+    "fromFileHint": "OpenAPI, Serverless, or Postman Collection",
     "fromUrl": "Import from URL",
-    "fromUrlHint": "Fetch the spec over the network",
-    "urlHint": "Enter the URL of an OpenAPI or Swagger document.",
+    "fromUrlHint": "Fetch an OpenAPI spec over the network",
+    "urlHint": "Enter the URL of an OpenAPI 3.x document (JSON or YAML).",
     "urlLabel": "Spec URL",
     "urlPlaceholder": "Enter URL…",
     "invalidUrl": "Invalid URL. Please enter an http or https address.",
     "load": "Load",
-    "loading": "Loading OpenAPI…",
+    "loading": "Loading workspace…",
     "back": "Back",
     "usePetstoreExample": "Example: Petstore (OpenAPI 3)",
-    "swagger2Hint": "Note: Swagger 2.0 specs are not supported — OpenAPI 3.x required."
+    "formatsHint": "Serverless and Postman Collection (*.json) are file-only. URL import is OpenAPI 3.x only. Swagger 2.0 is not supported."
   },
   "export": {
     "open": "Export",
@@ -106,7 +109,7 @@
   "settings": {
     "title": "Workspace",
     "export": "Export workspace",
-    "import": "Import workspace",
+    "import": "Restore workspace backup",
     "exportSuccess": "Workspace exported successfully.",
     "importSuccess": "Workspace imported successfully."
   },

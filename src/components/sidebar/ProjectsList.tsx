@@ -51,7 +51,7 @@ export function ProjectsList({
         className="inline-flex items-center justify-center gap-2 rounded-md border border-accent/40 bg-accent/10 px-3 py-2 text-xs font-medium text-accent transition-colors hover:bg-accent/20"
       >
         <FileUp className="size-3.5" aria-hidden />
-        {t("sidebar.importOpenApi")}
+        {t("sidebar.importWorkspace")}
       </button>
 
       {projects.length === 0 ? (

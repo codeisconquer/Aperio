@@ -26,7 +26,7 @@ fn handle_cli_import(app: &tauri::App) {
         return;
     }
 
-    match swagger::parse_swagger_path(std::path::Path::new(path)) {
+    match swagger::parse_project_path(std::path::Path::new(path)) {
         Ok(project) => {
             let handle = app.handle().clone();
             let _ = handle.emit("cli-import", project);

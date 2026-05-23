@@ -39,6 +39,34 @@ export async function installTauriMock(page: Page): Promise<void> {
         const body = dataMatch ? dataMatch[1] : null;
         return { method, url, headers, body };
       },
+      import_swagger_file: () => ({
+        id: "mock-postman-project",
+        title: "Demo API",
+        version: "2.1.0",
+        base_url: "https://api.example.com",
+        endpoints: [
+          {
+            method: "GET",
+            path: "/users",
+            summary: "Users / List users",
+            description: null,
+            default_body: null,
+            default_headers: "Accept: application/json",
+            path_params: [],
+            query_params: ["limit"],
+          },
+          {
+            method: "POST",
+            path: "/users",
+            summary: "Users / Create user",
+            description: null,
+            default_body: '{\n  "name": "Ada"\n}',
+            default_headers: "Content-Type: application/json",
+            path_params: [],
+            query_params: [],
+          },
+        ],
+      }),
       import_swagger_from_url: () => ({
         id: "mock-project-url",
         title: "Pet Store (mock)",
@@ -51,6 +79,7 @@ export async function installTauriMock(page: Page): Promise<void> {
             summary: "Finds Pets by status",
             description: null,
             default_body: null,
+            default_headers: null,
             path_params: [],
             query_params: [],
           },

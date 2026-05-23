@@ -5,6 +5,22 @@ All notable changes to Aperio are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v0.1.4] - 2026-05-23 — Workspace Hub & Postman Import
+
+### Added
+
+- **Multi-format import** — OpenAPI 3.x, Serverless Framework (`serverless.yml`), and **Postman Collection v2.1** (`.json`) with Rust auto-detection.
+- **Postman parser** — Recursive folders, methods, URLs, headers, raw bodies, and query parameters via `postman_parser.rs`.
+- **Serverless parser** — HTTP / HTTP API events from `functions:` via `serverless_parser.rs`.
+- **OpenAPI enhancements** — JSON body skeletons (`default_body`), `path_params`, and `query_params` on endpoints.
+- **Frontend** — „Projektraum importieren“, unified sidebar workspaces, `endpointToRequestDraft` for Postman pre-fill in the builder.
+- **Architecture docs** — PlantUML diagrams in `docs/diagrams/` (request flow, import process, token vault).
+
+### Changed
+
+- Import file dialog lists OpenAPI, Serverless, and Postman Collection (*.json) filters explicitly.
+- README and `SPRINTS.md` updated for Sprints 1–19.
+
 ## [v0.1.0] - 2026-05-23 — Initial MVP Release
 
 First public MVP: a fast, local-first desktop API client with OpenAPI workspaces, secure tokens, and pro-grade request tooling.
@@ -29,5 +45,6 @@ First public MVP: a fast, local-first desktop API client with OpenAPI workspaces
 
 - API tokens are never stored in plaintext; encryption uses AES-GCM with a keychain-backed master key.
 
-[Unreleased]: https://github.com/YOUR_ORG/aperio/compare/v0.1.0...HEAD
-[v0.1.0]: https://github.com/YOUR_ORG/aperio/releases/tag/v0.1.0
+[Unreleased]: https://github.com/codeisconquer/Aperio/compare/v0.1.4...HEAD
+[v0.1.4]: https://github.com/codeisconquer/Aperio/releases/tag/v0.1.4
+[v0.1.0]: https://github.com/codeisconquer/Aperio/releases/tag/v0.1.0

@@ -48,4 +48,52 @@ test.describe("Aperio desktop UI", () => {
     await expect(page.getByTestId("response-duration")).toContainText("42");
     await expect(page.getByTestId("response-empty")).toBeHidden();
   });
+
+  test("imports a workspace and lists endpoints in the sidebar", async ({
+    page,
+  }) => {
+    await page.goto("/");
+
+    await page
+      .getByTestId("layout-sidebar")
+      .getByRole("button", { name: "Import workspace" })
+      .click();
+    await expect(page.getByRole("dialog")).toBeVisible();
+
+    await page
+      .getByRole("button", { name: "Import from file" })
+      .click();
+
+    await expect(page.getByRole("dialog")).toBeHidden();
+
+    await expect(page.getByText("Demo API")).toBeVisible();
+    await expect(page.getByText("Users / List users")).toBeVisible();
+    await expect(page.getByText("Users / Create user")).toBeVisible();
+
+    await page.getByText("Users / List users").click();
+
+    await expect(page.locator("#http-method")).toHaveValue("GET");
+    await expect(page.locator("#request-url")).toHaveValue(
+      "https://api.example.com/users",
+    );
+    await expect(
+      page.getByTestId("layout-builder").locator('input[value="Accept"]'),
+    ).toBeVisible();
+    await expect(
+      page
+        .getByTestId("layout-builder")
+        .locator('input[value="application/json"]'),
+    ).toBeVisible();
+    await expect(
+      page.getByTestId("layout-builder").locator('input[value="limit"]'),
+    ).toBeVisible();
+
+    await page.getByText("Users / Create user").click();
+
+    await expect(page.locator("#http-method")).toHaveValue("POST");
+    await expect(
+      page.getByTestId("layout-builder").locator('input[value="Content-Type"]'),
+    ).toBeVisible();
+    await expect(page.getByTestId("layout-builder")).toContainText("Ada");
+  });
 });

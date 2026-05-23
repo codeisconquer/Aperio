@@ -1,0 +1,97 @@
+@startuml import_process
+' Aperio — workspace import (OpenAPI / Serverless / Postman)
+title Import Process — Workspace Detection & Sidebar State
+
+!theme plain
+skinparam backgroundColor #0B1220
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Helvetica
+skinparam defaultFontColor #E8F4F8
+skinparam titleFontColor #67E8F9
+skinparam titleFontSize 18
+skinparam activityBackgroundColor #132238
+skinparam activityBorderColor #22D3EE
+skinparam activityFontColor #E8F4F8
+skinparam activityDiamondBackgroundColor #164E63
+skinparam activityDiamondBorderColor #22D3EE
+skinparam activityDiamondFontColor #E8F4F8
+skinparam arrowColor #22D3EE
+skinparam partitionBackgroundColor #0F1A2E
+skinparam partitionBorderColor #1E4A6B
+skinparam partitionFontColor #67E8F9
+skinparam noteBackgroundColor #132238
+skinparam noteBorderColor #22D3EE
+skinparam noteFontColor #A5F3FC
+
+|React UI|
+start
+:User opens **Import workspace** modal;
+
+if (Import source?) then (File)
+  :invoke **import_swagger_file**\n(native file dialog);
+  |Tauri / Rust|
+  :Read file from disk;
+else (URL)
+  :invoke **import_swagger_from_url**\n(reqwest fetch);
+  |Tauri / Rust|
+  :Download body +\nContent-Type / URL hint;
+endif
+
+|Rust Core|
+:parse_project_content()\n**detect_import_format()**;
+
+partition "Auto-Detection (content + filename)" {
+  if (Postman JSON?) then (yes)
+    note right
+      Signals:
+      • info._postman_id
+      • info.schema contains
+        postman.com/json/collection
+    end note
+    #164E63:**Run postman_parser.rs**
+    :postman_parser::parse_postman_content;
+    note right
+      info.name → project title
+      Recursive item[] → folders
+      method, url.raw / host+path
+      header → default_headers
+      body.mode raw → default_body
+      query_params from URL
+    end note
+  elseif (Serverless YAML?) then (yes)
+    #164E63:**Run serverless_parser.rs**
+    :serverless_parser::parse_serverless_content;
+    note right
+      service: → project title
+      functions: → http / httpApi events
+      path + method → endpoints
+    end note
+  else (OpenAPI 3.x)
+    #164E63:**Run openapiv3**
+    :openapiv3 parse +\nbuild_project();
+    note right
+      operations() → endpoints
+      requestBody → default_body skeleton
+      parameters → query_params
+      {path} → path_params
+    end note
+  endif
+}
+
+:Build unified **SwaggerProject**\n{id, title, version,\nbase_url, endpoints[]};
+
+|React UI|
+:Return SwaggerProject via IPC;
+
+:handleOpenApiImported()\nsetProjects([project, ...prev]);
+
+:Render collapsible folder\nin **Projekträume** sidebar;
+
+:User selects endpoint;
+
+:Populate RequestBuilder\n• method + URL (base_url + path)\n• default_headers\n• default_body;
+
+stop
+
+@enduml

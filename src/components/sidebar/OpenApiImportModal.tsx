@@ -49,7 +49,7 @@ export function OpenApiImportModal({
     setError(null);
 
     if (!isValidOpenApiUrl(url)) {
-      setError(t("openapiImport.invalidUrl"));
+      setError(t("workspaceImport.invalidUrl"));
       return;
     }
 
@@ -73,7 +73,7 @@ export function OpenApiImportModal({
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"
       role="dialog"
       aria-modal="true"
-      aria-labelledby="openapi-import-title"
+      aria-labelledby="workspace-import-title"
       onClick={handleBackdropClick}
     >
       <div
@@ -82,17 +82,17 @@ export function OpenApiImportModal({
       >
         <header className="flex items-center justify-between border-b border-white/10 px-4 py-3">
           <h2
-            id="openapi-import-title"
+            id="workspace-import-title"
             className="text-sm font-semibold text-foreground"
           >
-            {t("openapiImport.title")}
+            {t("workspaceImport.title")}
           </h2>
           <button
             type="button"
             onClick={onClose}
             disabled={loading}
             className="rounded p-1 text-foreground/50 hover:bg-background/60 hover:text-foreground disabled:opacity-50"
-            aria-label={t("openapiImport.close")}
+            aria-label={t("workspaceImport.close")}
           >
             <X className="size-4" />
           </button>
@@ -102,15 +102,22 @@ export function OpenApiImportModal({
           {loading && (
             <div className="flex items-center justify-center gap-2 rounded-md border border-accent/30 bg-accent/10 px-3 py-4 text-sm text-accent">
               <Loader2 className="size-5 animate-spin" aria-hidden />
-              <span>{t("openapiImport.loading")}</span>
+              <span>{t("workspaceImport.loading")}</span>
             </div>
           )}
 
           {!loading && step === "choose" && (
             <>
-              <p className="text-xs text-foreground/50">
-                {t("openapiImport.chooseHint")}
-              </p>
+              <div className="flex flex-col gap-2">
+                <p className="text-xs text-foreground/50">
+                  {t("workspaceImport.chooseHint")}
+                </p>
+                <ul className="list-inside list-disc space-y-0.5 text-[10px] text-foreground/45">
+                  <li>{t("workspaceImport.formatOpenApi")}</li>
+                  <li>{t("workspaceImport.formatServerless")}</li>
+                  <li>{t("workspaceImport.formatPostman")}</li>
+                </ul>
+              </div>
               <div className="grid gap-2 sm:grid-cols-2">
                 <button
                   type="button"
@@ -119,10 +126,10 @@ export function OpenApiImportModal({
                 >
                   <FileUp className="size-6 text-accent" aria-hidden />
                   <span className="text-sm font-medium text-foreground">
-                    {t("openapiImport.fromFile")}
+                    {t("workspaceImport.fromFile")}
                   </span>
                   <span className="text-[10px] text-foreground/50">
-                    {t("openapiImport.fromFileHint")}
+                    {t("workspaceImport.fromFileHint")}
                   </span>
                 </button>
                 <button
@@ -135,10 +142,10 @@ export function OpenApiImportModal({
                 >
                   <Globe className="size-6 text-accent" aria-hidden />
                   <span className="text-sm font-medium text-foreground">
-                    {t("openapiImport.fromUrl")}
+                    {t("workspaceImport.fromUrl")}
                   </span>
                   <span className="text-[10px] text-foreground/50">
-                    {t("openapiImport.fromUrlHint")}
+                    {t("workspaceImport.fromUrlHint")}
                   </span>
                 </button>
               </div>
@@ -148,20 +155,20 @@ export function OpenApiImportModal({
           {!loading && step === "url" && (
             <form onSubmit={handleUrlSubmit} className="flex flex-col gap-3">
               <p className="text-xs text-foreground/50">
-                {t("openapiImport.urlHint")}
+                {t("workspaceImport.urlHint")}
               </p>
               <p className="text-[10px] text-foreground/40">
-                {t("openapiImport.swagger2Hint")}
+                {t("workspaceImport.formatsHint")}
               </p>
               <label className="flex flex-col gap-1">
                 <span className="text-xs font-medium text-foreground/70">
-                  {t("openapiImport.urlLabel")}
+                  {t("workspaceImport.urlLabel")}
                 </span>
                 <input
                   type="url"
                   value={url}
                   onChange={(e) => setUrl(e.target.value)}
-                  placeholder={t("openapiImport.urlPlaceholder")}
+                  placeholder={t("workspaceImport.urlPlaceholder")}
                   autoFocus
                   className="rounded-md border border-white/10 bg-background px-3 py-2 font-mono text-sm text-foreground outline-none focus:border-accent"
                 />
@@ -171,7 +178,7 @@ export function OpenApiImportModal({
                 onClick={() => setUrl(PETSTORE_EXAMPLE_URL)}
                 className="self-start text-[10px] text-accent hover:underline"
               >
-                {t("openapiImport.usePetstoreExample")}
+                {t("workspaceImport.usePetstoreExample")}
               </button>
               <div className="flex justify-end gap-2 pt-1">
                 <button
@@ -182,14 +189,14 @@ export function OpenApiImportModal({
                   }}
                   className="rounded-md border border-white/10 px-4 py-2 text-sm text-foreground/70 hover:bg-background/60"
                 >
-                  {t("openapiImport.back")}
+                  {t("workspaceImport.back")}
                 </button>
                 <button
                   type="submit"
                   disabled={!url.trim()}
                   className="inline-flex items-center gap-2 rounded-md bg-accent px-4 py-2 text-sm font-medium text-background disabled:cursor-not-allowed disabled:opacity-50"
                 >
-                  {t("openapiImport.load")}
+                  {t("workspaceImport.load")}
                 </button>
               </div>
             </form>

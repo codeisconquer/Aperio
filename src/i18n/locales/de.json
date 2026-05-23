@@ -22,26 +22,29 @@
     "history": "Verlauf",
     "projects": "Projekträume",
     "empty": "Noch keine Requests",
-    "projectsEmpty": "OpenAPI-Datei importieren, um einen Projektraum anzulegen",
-    "importOpenApi": "OpenAPI importieren"
+    "projectsEmpty": "Projektraum importieren, um Endpunkte aus OpenAPI, Serverless oder Postman zu laden",
+    "importWorkspace": "Projektraum importieren"
   },
-  "openapiImport": {
-    "title": "OpenAPI importieren",
+  "workspaceImport": {
+    "title": "Projektraum importieren",
     "close": "Schließen",
-    "chooseHint": "Wähle, wie du die OpenAPI-Spezifikation laden möchtest.",
+    "chooseHint": "Importiere eine API-Spezifikation als Projektraum. Unterstützte Dateiformate:",
+    "formatOpenApi": "OpenAPI 3.x — *.json, *.yaml, *.yml",
+    "formatServerless": "Serverless Framework — serverless.yml",
+    "formatPostman": "Postman Collection v2.1 — *.json",
     "fromFile": "Aus Datei importieren",
-    "fromFileHint": ".json, .yaml oder .yml",
+    "fromFileHint": "OpenAPI, Serverless oder Postman Collection",
     "fromUrl": "Von URL importieren",
-    "fromUrlHint": "Spec direkt aus dem Netz laden",
-    "urlHint": "Gib die URL zu einer OpenAPI- oder Swagger-Datei ein.",
+    "fromUrlHint": "OpenAPI-Spec aus dem Netz laden",
+    "urlHint": "Gib die URL zu einer OpenAPI-3.x-Datei ein (JSON oder YAML).",
     "urlLabel": "Spec-URL",
     "urlPlaceholder": "URL eingeben…",
     "invalidUrl": "Ungültige URL. Bitte eine http- oder https-Adresse eingeben.",
     "load": "Laden",
-    "loading": "OpenAPI wird geladen…",
+    "loading": "Projektraum wird geladen…",
     "back": "Zurück",
     "usePetstoreExample": "Beispiel: Petstore (OpenAPI 3)",
-    "swagger2Hint": "Hinweis: Swagger 2.0-Dateien werden nicht unterstützt — OpenAPI 3.x erforderlich."
+    "formatsHint": "Serverless und Postman Collection (*.json) nur per Dateiimport. URL-Import nur für OpenAPI 3.x. Swagger 2.0 wird nicht unterstützt."
   },
   "export": {
     "open": "Export",
@@ -106,7 +109,7 @@
   "settings": {
     "title": "Workspace",
     "export": "Workspace exportieren",
-    "import": "Workspace importieren",
+    "import": "Workspace-Backup importieren",
     "exportSuccess": "Workspace erfolgreich exportiert.",
     "importSuccess": "Workspace erfolgreich importiert."
   },

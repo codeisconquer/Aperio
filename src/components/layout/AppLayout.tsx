@@ -26,8 +26,8 @@ import {
   type RequestDraft,
 } from "../../types/history";
 import {
-  buildEndpointUrl,
   endpointKey,
+  endpointToRequestDraft,
   type SwaggerEndpoint,
   type SwaggerProject,
 } from "../../types/swagger";
@@ -178,12 +178,7 @@ export function AppLayout() {
 
   const handleEndpointSelect = useCallback(
     (project: SwaggerProject, endpoint: SwaggerEndpoint) => {
-      setDraft({
-        method: endpoint.method,
-        url: buildEndpointUrl(project.base_url, endpoint.path),
-        headers: "",
-        body: endpoint.default_body ?? "",
-      });
+      setDraft(endpointToRequestDraft(project, endpoint));
       setSelectedEndpointKey(
         endpointKey(project.id, endpoint.method, endpoint.path),
       );

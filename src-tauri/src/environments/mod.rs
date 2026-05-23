@@ -140,19 +140,25 @@ mod tests {
     use r2d2::Pool;
     use tempfile::TempDir;
 
-    fn test_pool() -> Pool<SqliteConnectionManager> {
+    struct TestPool {
+        _dir: TempDir,
+        pool: Pool<SqliteConnectionManager>,
+    }
+
+    fn test_pool() -> TestPool {
         let dir = TempDir::new().expect("tempdir");
         let path = dir.path().join("test.db");
         let manager = SqliteConnectionManager::file(&path);
         let pool = Pool::new(manager).expect("pool");
         let conn = pool.get().expect("conn");
         database::init_schema(&conn).expect("schema");
-        pool
+        TestPool { _dir: dir, pool }
     }
 
     #[test]
     fn saves_and_lists_environments() {
-        let pool = test_pool();
+        let test = test_pool();
+        let pool = &test.pool;
         let saved = save_environment(
             &pool,
             SaveEnvironmentPayload {
@@ -171,7 +177,8 @@ mod tests {
 
     #[test]
     fn rejects_invalid_variables_json() {
-        let pool = test_pool();
+        let test = test_pool();
+        let pool = &test.pool;
         let err = save_environment(
             &pool,
             SaveEnvironmentPayload {

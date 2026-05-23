@@ -1,0 +1,77 @@
+@startuml request_flow
+' Aperio — HTTP request lifecycle (React → Tauri → Rust → reqwest → SQLite)
+title Request Flow — Send API Call
+
+!theme plain
+skinparam backgroundColor #0B1220
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Helvetica
+skinparam defaultFontColor #E8F4F8
+skinparam titleFontColor #67E8F9
+skinparam titleFontSize 18
+skinparam sequenceArrowThickness 2
+skinparam sequenceArrowColor #22D3EE
+skinparam sequenceLifeLineBorderColor #1E4A6B
+skinparam sequenceParticipantBorderColor #22D3EE
+skinparam sequenceParticipantBackgroundColor #132238
+skinparam sequenceParticipantFontColor #E8F4F8
+skinparam sequenceBoxBorderColor #1E4A6B
+skinparam sequenceBoxBackgroundColor #0F1A2E
+skinparam noteBackgroundColor #132238
+skinparam noteBorderColor #22D3EE
+skinparam noteFontColor #A5F3FC
+
+box "Frontend (React + Vite)" #0F1A2E
+  participant "RequestBuilder\n(UI)" as UI
+  participant "sendRequest()\n(invoke)" as IPC_FE
+end box
+
+box "Tauri v2 IPC Bridge" #0F1A2E
+  participant "invoke_handler\nsend_request" as IPC
+end box
+
+box "Rust Core" #0F1A2E
+  participant "http::send_request" as RUST
+  participant "vault\n(Bearer token)" as VAULT
+  participant "reqwest\n(async Client)" as REQ
+  database "SQLite\n(history)" as DB
+end box
+
+UI -> UI : User clicks **Send**\n(apply {{env}} substitution)
+UI -> IPC_FE : sendRequest(payload)\nmethod, url, headers, body,\nproject_id?
+IPC_FE -> IPC : **Tauri IPC** JSON\ncommand: send_request
+
+IPC -> RUST : dispatch SendRequestPayload
+
+alt project_id set
+  RUST -> VAULT : get_decrypted_token(project_id)
+  VAULT -> DB : SELECT encrypted_token
+  DB --> VAULT : ciphertext (base64)
+  VAULT --> RUST : plaintext Bearer token
+  RUST -> RUST : inject Authorization header
+end
+
+RUST -> REQ : execute_http_request()\n(Method, URL, headers, body)
+activate REQ #164E63
+REQ -> REQ : HTTP round-trip\n(rustls-tls)
+REQ --> RUST : status, headers, body\n+ duration_ms
+deactivate REQ
+
+par Async history log (non-blocking)
+  RUST -> DB : log_history_async()\n**tokio::spawn_blocking**
+  activate DB #164E63
+  note right of DB
+    INSERT INTO history
+    (method, url, headers, body,
+    status_code, duration_ms)
+  end note
+  DB --> RUST : Ok (fire-and-forget)
+  deactivate DB
+end
+
+RUST --> IPC : HttpResponse JSON
+IPC --> IPC_FE : resolve Promise
+IPC_FE --> UI : render ResponseViewer\n(status, duration, body tree)
+
+@enduml

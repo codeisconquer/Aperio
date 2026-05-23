@@ -1,8 +1,8 @@
-# Sprint-Backlog — Aperio MVP
+# Sprint-Backlog — Aperio
 
-All twelve sprints are **complete**, covered by automated tests (Vitest, `cargo test`, Playwright E2E), and validated in CI. This document records the delivery history for the initial public release **v0.1.0**.
+Sprints **1–18** are **complete**, covered by automated tests (Vitest, `cargo test`, Playwright E2E), and validated in CI.
 
-**Status:** ✅ MVP ready for GitHub release
+**Status:** ✅ Feature-complete through v0.1.x — universal workspace hub, native Postman Collection import, architecture diagrams, and contributor docs
 
 ---
 
@@ -81,11 +81,58 @@ All twelve sprints are **complete**, covered by automated tests (Vitest, `cargo 
 - [x] E2E: Layout, cURL-Import, Senden, Status 200. — **Getestet (CI)**
 - [x] `npm run test:e2e` und CI-Integration. — **Getestet**
 
+## Sprint 13: OpenAPI URL-Import & HTTP-Client
+
+- [x] `import_swagger_from_url` mit `reqwest` und Format-Sniffing. — **Getestet (Rust)**
+- [x] Sidebar-Modal: Datei vs. URL, Loading-State, i18n. — **Getestet**
+- [x] Einheitlicher User-Agent (`AperioAPIClient/1.0.0`). — **Getestet**
+
+## Sprint 14: OpenAPI Request-Skelette & Parameter
+
+- [x] `default_body` aus `requestBody` / JSON-Schema (inkl. `$ref`). — **Getestet (Rust)**
+- [x] `path_params` aus Pfad-Templates `{var}`. — **Getestet (Rust)**
+- [x] `query_params` aus OpenAPI-`parameters`. — **Getestet (Rust)**
+- [x] Frontend: Body/URL beim Endpoint-Klick befüllen. — **Getestet**
+
+## Sprint 15: Serverless & Postman Parser
+
+- [x] `serverless_parser.rs` (`functions` → `http` / `httpApi`). — **Getestet (Rust)**
+- [x] `postman_parser.rs` (Collection v2.1, Ordner, Header, Body). — **Getestet (Rust)**
+- [x] `detect_import_format` + `parse_project_content`. — **Getestet (Rust)**
+- [x] Dateidialog-Filter (OpenAPI / Serverless / Postman). — **Getestet**
+
+## Sprint 16: Frontend Workspace Hub
+
+- [x] „Projektraum importieren“ (i18n DE/EN). — **Getestet**
+- [x] Einheitliche Sidebar-Darstellung für alle Formate. — **Getestet (E2E)**
+- [x] `default_headers` für Postman im Builder. — **Getestet**
+
+## Sprint 17: Architektur-Diagramme
+
+- [x] `docs/diagrams/request_flow.puml`. — **Dokumentiert**
+- [x] `docs/diagrams/import_process.puml`. — **Dokumentiert**
+- [x] `docs/diagrams/secure_token_vault.puml`. — **Dokumentiert**
+- [x] Nachtblau/Cyan PlantUML-Skin für CI/Docs. — **Dokumentiert**
+
+## Sprint 18: Dokumentation & Versionierung
+
+- [x] README: Workspace-Hub, Diagramme, Datenhygiene, Releases. — **Getestet**
+- [x] `CONTEXT.md` und `SPRINTS.md` aktualisiert. — **Getestet**
+- [x] GitHub Release-Workflow für versionierte `.dmg` / Installer. — **Getestet (Konfiguration)**
+- [x] `npm run build` + `cargo check` grün. — **Getestet**
+
+## Sprint 19: Postman-Import — Dokumentation & Diagramme
+
+- [x] `postman_parser.rs` — Collection v2.1, `_postman_id`-Erkennung, Ordner, Header, Body. — **Getestet (Rust)**
+- [x] Frontend: `endpointToRequestDraft`, i18n, Dateifilter *Postman Collection (*.json)*. — **Getestet (E2E)**
+- [x] `import_process.puml` — Auto-Detection-Zweig **Postman JSON? → postman_parser.rs**. — **Dokumentiert**
+- [x] README: lokale Postman-Migrationsalternative, Supported Formats. — **Dokumentiert**
+
 ---
 
-## Release checklist (v0.1.0)
+## Release checklist
 
-- [x] Feature-complete MVP (Sprints 1–12)
+- [x] Feature-complete (Sprints 1–19)
 - [x] `npm run build`, `npm test`, `npm run test:e2e`, `cargo test`
-- [x] `README.md`, `CHANGELOG.md`, Release-Workflow dokumentiert
-- [ ] Git-Tag `v0.1.0` pushen → GitHub Release-Artefakte
+- [x] `README.md`, `CONTEXT.md`, `docs/diagrams/`, Release-Workflow
+- [x] Tags `v0.1.0`–`v0.1.2` → GitHub Release-Artefakte

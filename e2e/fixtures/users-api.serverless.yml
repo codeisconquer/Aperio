@@ -1,0 +1,18 @@
+service: users-api
+frameworkVersion: '3'
+provider:
+  name: aws
+  runtime: nodejs18.x
+functions:
+  listUsers:
+    handler: src/handlers.list
+    events:
+      - http:
+          path: users
+          method: get
+  createUser:
+    handler: src/handlers.create
+    events:
+      - httpApi:
+          path: /users
+          method: post

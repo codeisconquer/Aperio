@@ -1,3 +1,6 @@
+mod postman_parser;
+mod serverless_parser;
+
 use std::fs;
 use std::path::{Path, PathBuf};
 
@@ -20,8 +23,17 @@ pub struct SwaggerEndpoint {
     pub description: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub default_body: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub default_headers: Option<String>,
     pub path_params: Vec<String>,
     pub query_params: Vec<String>,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum ImportFormat {
+    OpenApi,
+    Serverless,
+    Postman,
 }
 
 const MAX_SCHEMA_DEPTH: usize = 4;
@@ -50,7 +62,114 @@ fn extension_from_path(path: &Path) -> Result<String, String> {
     path.extension()
         .and_then(|ext| ext.to_str())
         .map(|ext| ext.to_ascii_lowercase())
-        .ok_or_else(|| "OpenAPI file must have .json, .yml, or .yaml extension".to_string())
+        .ok_or_else(|| {
+            "File must have extension .json, .yml, .yaml, or be named serverless.yml".to_string()
+        })
+}
+
+fn is_serverless_filename(path: &Path) -> bool {
+    path.file_name()
+        .and_then(|name| name.to_str())
+        .map(|name| {
+            name.eq_ignore_ascii_case("serverless.yml")
+                || name.eq_ignore_ascii_case("serverless.yaml")
+        })
+        .unwrap_or(false)
+}
+
+fn yaml_has_serverless_shape(content: &str) -> bool {
+    let Ok(value) = serde_yaml::from_str::<serde_yaml::Value>(content) else {
+        return false;
+    };
+
+    value.get("functions").is_some() && value.get("service").is_some()
+}
+
+fn detect_import_format(path: Option<&Path>, content: &str) -> ImportFormat {
+    if path.is_some_and(is_serverless_filename) {
+        return ImportFormat::Serverless;
+    }
+
+    let trimmed = content.trim_start();
+
+    if trimmed.starts_with('{') {
+        if postman_parser::is_postman_json(content) {
+            return ImportFormat::Postman;
+        }
+        if serde_json::from_str::<Value>(content)
+            .ok()
+            .is_some_and(|value| value.get("openapi").is_some() || value.get("swagger").is_some())
+        {
+            return ImportFormat::OpenApi;
+        }
+    }
+
+    if trimmed.starts_with("openapi:")
+        || trimmed.starts_with("swagger:")
+        || (trimmed.starts_with('{') == false && yaml_has_openapi_shape(content))
+    {
+        return ImportFormat::OpenApi;
+    }
+
+    if yaml_has_serverless_shape(content) {
+        return ImportFormat::Serverless;
+    }
+
+    if let Some(path) = path {
+        if let Ok(ext) = extension_from_path(path) {
+            return match ext.as_str() {
+                "json" if postman_parser::is_postman_json(content) => ImportFormat::Postman,
+                "json" => ImportFormat::OpenApi,
+                "yml" | "yaml" if yaml_has_serverless_shape(content) => ImportFormat::Serverless,
+                "yml" | "yaml" => ImportFormat::OpenApi,
+                _ => ImportFormat::OpenApi,
+            };
+        }
+    }
+
+    ImportFormat::OpenApi
+}
+
+fn yaml_has_openapi_shape(content: &str) -> bool {
+    let Ok(value) = serde_yaml::from_str::<serde_yaml::Value>(content) else {
+        return content.contains("openapi:") || content.contains("swagger:");
+    };
+
+    value.get("openapi").is_some() || value.get("swagger").is_some()
+}
+
+pub fn parse_project_content(content: &str, path: Option<&Path>) -> Result<SwaggerProject, String> {
+    match detect_import_format(path, content) {
+        ImportFormat::OpenApi => {
+            let extension = path
+                .and_then(|file| extension_from_path(file).ok())
+                .or_else(|| sniff_openapi_extension(content))
+                .unwrap_or_else(|| "yaml".to_string());
+            parse_openapi_project(content, &extension)
+        }
+        ImportFormat::Serverless => serverless_parser::parse_serverless_content(content),
+        ImportFormat::Postman => postman_parser::parse_postman_content(content),
+    }
+}
+
+fn sniff_openapi_extension(content: &str) -> Option<String> {
+    let trimmed = content.trim_start();
+    if trimmed.starts_with('{') || trimmed.starts_with('[') {
+        Some("json".into())
+    } else {
+        Some("yaml".into())
+    }
+}
+
+fn parse_openapi_project(content: &str, extension: &str) -> Result<SwaggerProject, String> {
+    let spec = parse_openapi_content(content, extension)?;
+    build_project(spec)
+}
+
+pub fn parse_project_path(path: &Path) -> Result<SwaggerProject, String> {
+    let content =
+        fs::read_to_string(path).map_err(|e| format!("Failed to read import file: {e}"))?;
+    parse_project_content(&content, Some(path))
 }
 
 fn method_supports_default_body(method: &str) -> bool {
@@ -214,13 +333,13 @@ fn schema_ref_to_json_value(
     schema_to_json_value(spec, resolved, depth)
 }
 
-fn push_unique(names: &mut Vec<String>, name: String) {
+pub(crate) fn push_unique(names: &mut Vec<String>, name: String) {
     if !names.iter().any(|existing| existing == &name) {
         names.push(name);
     }
 }
 
-fn extract_path_params(path: &str) -> Vec<String> {
+pub(crate) fn extract_path_params(path: &str) -> Vec<String> {
     let mut params = Vec::new();
     let mut rest = path;
     while let Some(start) = rest.find('{') {
@@ -300,6 +419,7 @@ fn build_project(spec: OpenAPI) -> Result<SwaggerProject, String> {
                 summary: operation.summary.clone(),
                 description: operation.description.clone(),
                 default_body,
+                default_headers: None,
                 path_params: extract_path_params(path),
                 query_params: extract_query_params(&spec, operation),
             }
@@ -317,18 +437,6 @@ fn build_project(spec: OpenAPI) -> Result<SwaggerProject, String> {
         base_url,
         endpoints,
     })
-}
-
-pub fn parse_swagger_content(content: &str, extension: &str) -> Result<SwaggerProject, String> {
-    let spec = parse_openapi_content(content, extension)?;
-    build_project(spec)
-}
-
-pub fn parse_swagger_path(path: &Path) -> Result<SwaggerProject, String> {
-    let extension = extension_from_path(path)?;
-    let content =
-        fs::read_to_string(path).map_err(|e| format!("Failed to read OpenAPI file: {e}"))?;
-    parse_swagger_content(&content, &extension)
 }
 
 fn extension_from_url(url: &str) -> Option<String> {
@@ -372,25 +480,46 @@ fn extension_from_content_sniff(content: &str) -> Option<String> {
     None
 }
 
-fn resolve_openapi_extension(
+fn resolve_import_from_url(
     url: &str,
     content_type: Option<&str>,
     content: &str,
-) -> Result<String, String> {
-    if let Some(ext) = extension_from_url(url) {
-        return Ok(ext);
+) -> Result<SwaggerProject, String> {
+    let path_hint = PathBuf::from(
+        url.split('?')
+            .next()
+            .unwrap_or(url)
+            .split('#')
+            .next()
+            .unwrap_or(url),
+    );
+
+    if path_hint.file_name().is_some_and(|name| {
+        name.to_str()
+            .is_some_and(|file| file.eq_ignore_ascii_case("serverless.yml") || file.eq_ignore_ascii_case("serverless.yaml"))
+    }) {
+        return serverless_parser::parse_serverless_content(content);
     }
 
-    if let Some(content_type) = content_type {
-        if let Some(ext) = extension_from_content_type(content_type) {
-            return Ok(ext);
-        }
+    if postman_parser::is_postman_json(content) {
+        return postman_parser::parse_postman_content(content);
     }
 
-    extension_from_content_sniff(content).ok_or_else(|| {
-        "Could not detect OpenAPI format. Use a .json or .yaml URL, or serve a valid Content-Type."
-            .into()
-    })
+    if yaml_has_serverless_shape(content) {
+        return serverless_parser::parse_serverless_content(content);
+    }
+
+    let extension = extension_from_url(url)
+        .or_else(|| {
+            content_type.and_then(extension_from_content_type)
+        })
+        .or_else(|| extension_from_content_sniff(content))
+        .ok_or_else(|| {
+            "Could not detect API spec format. Use OpenAPI, serverless.yml, or Postman Collection JSON."
+                .to_string()
+        })?;
+
+    parse_openapi_project(content, &extension)
 }
 
 pub async fn fetch_and_parse_swagger_url(url: &str) -> Result<SwaggerProject, String> {
@@ -430,9 +559,7 @@ pub async fn fetch_and_parse_swagger_url(url: &str) -> Result<SwaggerProject, St
         return Err("OpenAPI URL returned an empty response body".into());
     }
 
-    let extension =
-        resolve_openapi_extension(trimmed, content_type.as_deref(), &body)?;
-    parse_swagger_content(&body, &extension)
+    resolve_import_from_url(trimmed, content_type.as_deref(), &body)
 }
 
 #[tauri::command]
@@ -445,8 +572,11 @@ pub async fn import_swagger_file(app: AppHandle) -> Result<SwaggerProject, Strin
     let picked = app
         .dialog()
         .file()
-        .add_filter("OpenAPI", &["json", "yml", "yaml"])
-        .set_title("Import OpenAPI / Swagger")
+        .add_filter("OpenAPI (.json, .yaml, .yml)", &["json", "yml", "yaml"])
+        .add_filter("Serverless Config (serverless.yml)", &["yml", "yaml"])
+        .add_filter("Postman Collection (*.json)", &["json"])
+        .add_filter("All supported formats", &["json", "yml", "yaml"])
+        .set_title("Import workspace")
         .blocking_pick_file();
 
     let path = picked.ok_or_else(|| "Import cancelled".to_string())?;
@@ -454,7 +584,7 @@ pub async fn import_swagger_file(app: AppHandle) -> Result<SwaggerProject, Strin
         .into_path()
         .map_err(|e| format!("Invalid file path: {e}"))?;
 
-    parse_swagger_path(&path)
+    parse_project_path(&path)
 }
 
 #[cfg(test)]
@@ -513,7 +643,7 @@ paths:
 
     #[test]
     fn generates_default_body_for_post_with_json_schema() {
-        let project = parse_swagger_content(POST_WITH_BODY_YAML, "yaml").expect("parse yaml");
+        let project = parse_openapi_project(POST_WITH_BODY_YAML, "yaml").expect("parse yaml");
         let post = project
             .endpoints
             .iter()
@@ -563,7 +693,7 @@ paths:
           description: OK
 "#;
 
-        let project = parse_swagger_content(YAML, "yaml").expect("parse yaml");
+        let project = parse_openapi_project(YAML, "yaml").expect("parse yaml");
         let patch = project.endpoints.first().expect("patch");
         assert_eq!(patch.method, "PATCH");
         let body: Value =
@@ -609,7 +739,7 @@ paths:
           description: OK
 "#;
 
-        let project = parse_swagger_content(YAML, "yaml").expect("parse yaml");
+        let project = parse_openapi_project(YAML, "yaml").expect("parse yaml");
         let endpoint = project.endpoints.first().expect("endpoint");
         assert_eq!(endpoint.method, "GET");
         assert_eq!(endpoint.path, "/agents/repos/{owner}/{repo}/tasks");
@@ -627,7 +757,7 @@ paths:
 
     #[test]
     fn parses_minimal_yaml() {
-        let project = parse_swagger_content(MINIMAL_YAML, "yaml").expect("parse yaml");
+        let project = parse_openapi_project(MINIMAL_YAML, "yaml").expect("parse yaml");
         assert_eq!(project.title, "Test API");
         assert_eq!(project.version, "1.0.0");
         assert_eq!(project.base_url.as_deref(), Some("https://api.example.com"));
@@ -684,5 +814,43 @@ paths:
             extension_from_content_sniff("openapi: 3.0.0\ninfo:\n  title: X").as_deref(),
             Some("yaml")
         );
+    }
+
+    #[test]
+    fn detects_serverless_by_filename() {
+        const YAML: &str = r#"
+service: demo
+functions:
+  ping:
+    handler: ping.main
+    events:
+      - http:
+          path: ping
+          method: get
+"#;
+        let path = Path::new("/tmp/serverless.yml");
+        let project = parse_project_content(YAML, Some(path)).expect("serverless import");
+        assert_eq!(project.title, "demo");
+        assert_eq!(project.endpoints[0].path, "/ping");
+    }
+
+    #[test]
+    fn routes_postman_json_by_schema() {
+        const JSON: &str = r#"{
+  "info": {
+    "name": "Quick",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [{
+    "name": "Ping",
+    "request": {
+      "method": "GET",
+      "url": "https://api.example.com/ping"
+    }
+  }]
+}"#;
+        let project = parse_project_content(JSON, None).expect("postman import");
+        assert_eq!(project.title, "Quick");
+        assert_eq!(project.endpoints[0].path, "/ping");
     }
 }

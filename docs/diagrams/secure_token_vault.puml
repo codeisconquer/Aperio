@@ -1,0 +1,90 @@
+@startuml secure_token_vault
+' Aperio — secure token vault (OS keychain + AES-GCM + SQLite)
+title Secure Token Vault — Encryption at Rest
+
+!theme plain
+skinparam backgroundColor #0B1220
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Helvetica
+skinparam defaultFontColor #E8F4F8
+skinparam titleFontColor #67E8F9
+skinparam titleFontSize 18
+skinparam sequenceArrowThickness 2
+skinparam sequenceArrowColor #22D3EE
+skinparam sequenceLifeLineBorderColor #1E4A6B
+skinparam sequenceParticipantBorderColor #22D3EE
+skinparam sequenceParticipantBackgroundColor #132238
+skinparam sequenceParticipantFontColor #E8F4F8
+skinparam sequenceBoxBorderColor #1E4A6B
+skinparam sequenceBoxBackgroundColor #0F1A2E
+skinparam noteBackgroundColor #132238
+skinparam noteBorderColor #22D3EE
+skinparam noteFontColor #A5F3FC
+
+box "Frontend (React)" #0F1A2E
+  participant "TokenVaultModal" as UI
+  participant "invoke\nsave_secure_token" as IPC_FE
+end box
+
+box "Tauri IPC" #0F1A2E
+  participant "vault::save_secure_token" as IPC
+end box
+
+box "Rust Core" #0F1A2E
+  participant "crypto" as CRYPTO
+  participant "keyring crate" as KEYRING
+  database "SQLite\nsecure_tokens" as DB
+end box
+
+box "OS Secure Storage" #0F1A2E
+  participant "Keychain /\nCredential Manager" as OS
+end box
+
+== App startup (once) ==
+note over CRYPTO, OS
+  setup(): crypto::ensure_master_key()
+end note
+CRYPTO -> KEYRING : Entry::get_password()\ncom.aperio.app / master-encryption-key
+alt No master key yet
+  KEYRING -> OS : read password
+  OS --> KEYRING : NoEntry
+  CRYPTO -> CRYPTO : Aes256Gcm::generate_key(OsRng)
+  CRYPTO -> KEYRING : set_password(hex-encoded 32 bytes)
+  KEYRING -> OS : store master key
+else Key exists
+  KEYRING -> OS : read password
+  OS --> KEYRING : hex master key (32 B)
+end
+CRYPTO -> CRYPTO : cache in MASTER_KEY OnceLock
+
+== User saves API token ==
+UI -> UI : User enters token\nfor workspace (project_id)
+UI -> IPC_FE : save_secure_token\n{ project_id, token }
+IPC_FE -> IPC : Tauri IPC
+
+IPC -> CRYPTO : encrypt(plaintext token)
+
+CRYPTO -> CRYPTO : master_key() from cache\nor reload from keyring
+CRYPTO -> CRYPTO : **AES-256-GCM**\ngenerate_nonce(OsRng)
+note right of CRYPTO
+  payload = nonce (12 B)
+          + ciphertext
+  output = base64(payload)
+end note
+
+IPC -> DB : INSERT INTO secure_tokens\nON CONFLICT UPDATE\n(project_id, encrypted_token)
+activate DB #164E63
+DB --> IPC : Ok
+deactivate DB
+
+IPC --> IPC_FE : success
+IPC_FE --> UI : show "token stored"\n(lock icon in sidebar)
+
+== Later: send_request with project_id ==
+note over IPC, DB
+  get_decrypted_token() → decrypt()
+  Bearer header injected in send_request
+end note
+
+@enduml
