@@ -3,6 +3,9 @@ export interface SwaggerEndpoint {
   path: string;
   summary?: string | null;
   description?: string | null;
+  default_body?: string | null;
+  path_params: string[];
+  query_params: string[];
 }
 
 export interface SwaggerProject {

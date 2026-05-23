@@ -182,7 +182,7 @@ export function AppLayout() {
         method: endpoint.method,
         url: buildEndpointUrl(project.base_url, endpoint.path),
         headers: "",
-        body: "",
+        body: endpoint.default_body ?? "",
       });
       setSelectedEndpointKey(
         endpointKey(project.id, endpoint.method, endpoint.path),

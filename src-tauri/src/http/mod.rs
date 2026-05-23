@@ -1,6 +1,9 @@
+mod client;
 mod code_snippets;
 mod curl_export;
 mod curl_import;
+
+pub use client::build_http_client;
 
 use std::collections::HashMap;
 use std::str::FromStr;
@@ -156,7 +159,7 @@ pub async fn send_request(
     let mut headers = parse_headers(&headers_str)?;
     apply_project_auth(&pool, payload.project_id.as_deref(), &mut headers)?;
 
-    let client = Client::new();
+    let client = build_http_client()?;
     let http_response =
         execute_http_request(&client, &method_str, &url_str, headers, &body_str).await?;
 
@@ -203,7 +206,7 @@ mod tests {
             .mount(&server)
             .await;
 
-        let client = Client::new();
+        let client = build_http_client().expect("http client");
         let response = execute_http_request(
             &client,
             "GET",
