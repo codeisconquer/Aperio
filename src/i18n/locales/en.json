@@ -1,0 +1,113 @@
+{
+  "app": {
+    "title": "Aperio"
+  },
+  "environments": {
+    "label": "Environment",
+    "none": "No environment",
+    "create": "New environment",
+    "edit": "Edit environment",
+    "createTitle": "Create environment",
+    "editTitle": "Edit environment",
+    "close": "Close",
+    "hint": "Variables are substituted as {{name}} in the URL, headers, and body before the request is sent.",
+    "nameLabel": "Name",
+    "namePlaceholder": "e.g. Local, Staging",
+    "variablesLabel": "Variables",
+    "save": "Save",
+    "delete": "Delete"
+  },
+  "sidebar": {
+    "title": "Collections",
+    "history": "History",
+    "projects": "Workspaces",
+    "empty": "No requests yet",
+    "projectsEmpty": "Import an OpenAPI file to create a workspace",
+    "importOpenApi": "Import OpenAPI",
+    "importing": "Importing…"
+  },
+  "export": {
+    "open": "Export",
+    "copyCurl": "Copy as cURL",
+    "copyWget": "Copy as wget",
+    "openSnippets": "Generate code snippets",
+    "modalTitle": "Export request",
+    "close": "Close",
+    "copy": "Copy",
+    "copied": "Copied",
+    "copiedCurl": "cURL command copied to clipboard",
+    "copiedWget": "wget command copied to clipboard",
+    "noUrl": "Enter a URL before exporting",
+    "tabs": {
+      "curl": "cURL",
+      "wget": "wget",
+      "go": "Go (net/http)",
+      "rust": "Rust (reqwest)"
+    }
+  },
+  "curlImport": {
+    "open": "Import cURL",
+    "title": "Import cURL command",
+    "close": "Close",
+    "hint": "Paste a command copied from Chrome DevTools, Postman, or your terminal. Aperio parses method, URL, headers, and body.",
+    "label": "cURL command",
+    "placeholder": "curl 'https://api.example.com/items' -H 'Accept: application/json' ...",
+    "import": "Import",
+    "importing": "Importing…",
+    "cancel": "Cancel"
+  },
+  "builder": {
+    "title": "Request",
+    "method": "Method",
+    "url": "URL",
+    "urlPlaceholder": "https://api.example.com/endpoint",
+    "queryParams": "Query parameters",
+    "headers": "Headers",
+    "body": "Body",
+    "send": "Send",
+    "sending": "Sending…",
+    "table": {
+      "key": "Key",
+      "value": "Value",
+      "keyPlaceholder": "Name",
+      "valuePlaceholder": "Value",
+      "remove": "Remove row"
+    }
+  },
+  "response": {
+    "title": "Response",
+    "empty": "Send a request to see the response here",
+    "loading": "Waiting for response…",
+    "status": "Status",
+    "duration": "Duration",
+    "body": "Body",
+    "ms": "ms",
+    "noBody": "(empty)",
+    "copyBody": "Copy",
+    "copied": "Copied"
+  },
+  "settings": {
+    "title": "Workspace",
+    "export": "Export workspace",
+    "import": "Import workspace",
+    "exportSuccess": "Workspace exported successfully.",
+    "importSuccess": "Workspace imported successfully."
+  },
+  "vault": {
+    "title": "Token vault",
+    "open": "Manage API token",
+    "close": "Close",
+    "project": "Workspace",
+    "hint": "The token is encrypted locally and injected as a Bearer token when you send requests from this workspace.",
+    "tokenLabel": "API token",
+    "tokenPlaceholder": "Paste your token here",
+    "stored": "A token is stored for this workspace.",
+    "save": "Save token",
+    "remove": "Remove"
+  },
+  "language": {
+    "label": "Language",
+    "de": "Deutsch",
+    "en": "English"
+  }
+}

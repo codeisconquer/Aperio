@@ -1,0 +1,113 @@
+{
+  "app": {
+    "title": "Aperio"
+  },
+  "environments": {
+    "label": "Umgebung",
+    "none": "Keine Umgebung",
+    "create": "Neue Umgebung",
+    "edit": "Umgebung bearbeiten",
+    "createTitle": "Umgebung anlegen",
+    "editTitle": "Umgebung bearbeiten",
+    "close": "Schließen",
+    "hint": "Variablen werden als {{name}} in URL, Headern und Body ersetzt, bevor der Request gesendet wird.",
+    "nameLabel": "Name",
+    "namePlaceholder": "z. B. Local, Staging",
+    "variablesLabel": "Variablen",
+    "save": "Speichern",
+    "delete": "Löschen"
+  },
+  "sidebar": {
+    "title": "Sammlungen",
+    "history": "Verlauf",
+    "projects": "Projekträume",
+    "empty": "Noch keine Requests",
+    "projectsEmpty": "OpenAPI-Datei importieren, um einen Projektraum anzulegen",
+    "importOpenApi": "OpenAPI importieren",
+    "importing": "Importiere…"
+  },
+  "export": {
+    "open": "Export",
+    "copyCurl": "Als cURL kopieren",
+    "copyWget": "Als wget kopieren",
+    "openSnippets": "Code-Snippets generieren",
+    "modalTitle": "Request exportieren",
+    "close": "Schließen",
+    "copy": "Kopieren",
+    "copied": "Kopiert",
+    "copiedCurl": "cURL-Befehl in die Zwischenablage kopiert",
+    "copiedWget": "wget-Befehl in die Zwischenablage kopiert",
+    "noUrl": "Bitte zuerst eine URL eingeben",
+    "tabs": {
+      "curl": "cURL",
+      "wget": "wget",
+      "go": "Go (net/http)",
+      "rust": "Rust (reqwest)"
+    }
+  },
+  "curlImport": {
+    "open": "cURL importieren",
+    "title": "cURL-Befehl importieren",
+    "close": "Schließen",
+    "hint": "Füge einen Befehl aus Chrome DevTools, Postman oder dem Terminal ein. Aperio erkennt Methode, URL, Header und Body.",
+    "label": "cURL-Befehl",
+    "placeholder": "curl 'https://api.example.com/items' -H 'Accept: application/json' ...",
+    "import": "Importieren",
+    "importing": "Importiere…",
+    "cancel": "Abbrechen"
+  },
+  "builder": {
+    "title": "Request",
+    "method": "Methode",
+    "url": "URL",
+    "urlPlaceholder": "https://api.example.com/endpoint",
+    "queryParams": "Query-Parameter",
+    "headers": "Header",
+    "body": "Body",
+    "send": "Senden",
+    "sending": "Sende…",
+    "table": {
+      "key": "Schlüssel",
+      "value": "Wert",
+      "keyPlaceholder": "Name",
+      "valuePlaceholder": "Wert",
+      "remove": "Zeile entfernen"
+    }
+  },
+  "response": {
+    "title": "Antwort",
+    "empty": "Sende einen Request, um die Antwort hier zu sehen",
+    "loading": "Warte auf Antwort…",
+    "status": "Status",
+    "duration": "Dauer",
+    "body": "Body",
+    "ms": "ms",
+    "noBody": "(leer)",
+    "copyBody": "Kopieren",
+    "copied": "Kopiert"
+  },
+  "settings": {
+    "title": "Workspace",
+    "export": "Workspace exportieren",
+    "import": "Workspace importieren",
+    "exportSuccess": "Workspace erfolgreich exportiert.",
+    "importSuccess": "Workspace erfolgreich importiert."
+  },
+  "vault": {
+    "title": "Token-Tresor",
+    "open": "API-Token verwalten",
+    "close": "Schließen",
+    "project": "Projektraum",
+    "hint": "Der Token wird lokal verschlüsselt und bei Requests aus diesem Projektraum als Bearer-Token mitgesendet.",
+    "tokenLabel": "API-Token",
+    "tokenPlaceholder": "Token hier einfügen",
+    "stored": "Für diesen Projektraum ist ein Token hinterlegt.",
+    "save": "Token speichern",
+    "remove": "Entfernen"
+  },
+  "language": {
+    "label": "Sprache",
+    "de": "Deutsch",
+    "en": "English"
+  }
+}
