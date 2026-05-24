@@ -5,6 +5,25 @@ All notable changes to Aperio are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v0.1.5] - 2026-05-24 — Path Variables, Code Export & macOS Install
+
+### Added
+
+- **Path variables** — Sidebar endpoints with `{param}` templates show a dedicated „Pfad-Variablen“ section; values are substituted into the URL before send.
+- **Code export** — Copy request as **Python (`requests`)** or **Node.js (`fetch`)** from the Export dropdown (alongside cURL/wget).
+- **macOS distribution** — GitHub Release workflow uploads **`.app.tar.gz`** bundles next to `.dmg`; README Gatekeeper guide with `xattr -cr`; Homebrew cask template in `scripts/homebrew/aperio.rb`.
+- **i18n** — Full localization audit; synced `de.json` / `en.json` (120 keys each); JSON tree labels and clipboard errors translated.
+- **Developer tooling** — `npm run typecheck` script.
+
+### Fixed
+
+- **OpenAPI body skeletons** — `default_body` generation for POST/PUT/PATCH now handles schemas without explicit `type: object` (`SchemaKind::Any`), nested objects, and `allOf` merges; pretty-printed JSON in the builder.
+
+### Changed
+
+- Export menu uses resolved URLs (path params applied) for generated snippets.
+- Release notes on GitHub link to macOS Gatekeeper documentation.
+
 ## [v0.1.4] - 2026-05-23 — Workspace Hub & Postman Import
 
 ### Added
@@ -45,6 +64,7 @@ First public MVP: a fast, local-first desktop API client with OpenAPI workspaces
 
 - API tokens are never stored in plaintext; encryption uses AES-GCM with a keychain-backed master key.
 
-[Unreleased]: https://github.com/codeisconquer/Aperio/compare/v0.1.4...HEAD
+[Unreleased]: https://github.com/codeisconquer/Aperio/compare/v0.1.5...HEAD
+[v0.1.5]: https://github.com/codeisconquer/Aperio/releases/tag/v0.1.5
 [v0.1.4]: https://github.com/codeisconquer/Aperio/releases/tag/v0.1.4
 [v0.1.0]: https://github.com/codeisconquer/Aperio/releases/tag/v0.1.0

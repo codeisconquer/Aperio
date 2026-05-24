@@ -180,7 +180,9 @@ chmod +x build-mac.sh && ./build-mac.sh
 Artifacts (version from `src-tauri/tauri.conf.json`):
 
 - `src-tauri/target/release/bundle/dmg/Aperio_*_aarch64.dmg`
-- `src-tauri/target/release/bundle/macos/Aperio.app`
+- `src-tauri/target/release/bundle/macos/Aperio.app` (or pack as `.app.tar.gz` for distribution)
+
+For Gatekeeper / quarantine notes, see [macOS Installation Note](#-macos-installation-note-gatekeeper) below.
 
 Intel build:
 
@@ -227,7 +229,31 @@ git tag v0.1.2
 git push origin v0.1.2
 ```
 
-The [Release workflow](.github/workflows/release.yml) attaches `.dmg`, `.msi`/`.exe`, and `.AppImage`/`.deb` to the release page.
+The [Release workflow](.github/workflows/release.yml) attaches `.dmg`, `.app.tar.gz` (macOS), `.msi`/`.exe`, and `.AppImage`/`.deb` to the release page.
+
+## 🍎 macOS Installation Note (Gatekeeper)
+
+macOS **Gatekeeper** may block Aperio on first launch and show *“Aperio.app is damaged and can’t be opened”* or similar. That message is misleading: the app is not corrupt. It is **unsigned and not notarized** — we ship open-source builds without Apple’s paid Developer ID program (~$99/year). Downloads from GitHub also carry Apple’s **quarantine** flag (`com.apple.quarantine`), which triggers stricter checks.
+
+**Recommended install (fewer Gatekeeper issues):**
+
+1. Download the **`.app.tar.gz`** for your Mac (Apple Silicon or Intel) from [Releases](https://github.com/codeisconquer/Aperio/releases).
+2. Extract and move the app to Applications:
+   ```bash
+   tar -xzf Aperio_*_macos-aarch64.app.tar.gz   # or macos-x64
+   mv Aperio.app /Applications/
+   ```
+
+**If macOS still reports the app as damaged**, remove the quarantine attribute once:
+
+```bash
+# Falls die App als beschädigt gemeldet wird, führe diesen Befehl aus:
+xattr -cr /Applications/Aperio.app
+```
+
+Then open Aperio from Applications or run `open -a Aperio`.
+
+**Homebrew (advanced):** A cask formula template lives in [`scripts/homebrew/aperio.rb`](scripts/homebrew/aperio.rb) for a future tap — `brew install --cask` avoids manual quarantine handling for many setups.
 
 See [CHANGELOG.md](CHANGELOG.md) for version history.
 

@@ -76,10 +76,35 @@ jobs:
             ## Downloads
             | Platform | Artifacts |
             |----------|-----------|
-            | macOS (Apple Silicon) | `.dmg` (aarch64) |
-            | macOS (Intel) | `.dmg` (x64) |
+            | macOS (Apple Silicon) | `.dmg`, `.app.tar.gz` (aarch64) |
+            | macOS (Intel) | `.dmg`, `.app.tar.gz` (x64) |
             | Windows | `.msi` / setup `.exe` |
             | Linux | `.AppImage`, `.deb` |
+
+            ### macOS Gatekeeper
+            Unsigned builds may show **"App is damaged"**. Prefer the `.app.tar.gz` over the `.dmg`, or run:
+            `xattr -cr /Applications/Aperio.app`
+            See [README — macOS Installation Note](https://github.com/${{ github.repository }}#-macos-installation-note-gatekeeper).
           releaseDraft: false
           prerelease: false
           args: ${{ matrix.args }}
+
+      - name: Package macOS app bundle (.app.tar.gz)
+        if: matrix.platform == 'macos-latest'
+        run: |
+          set -euo pipefail
+          APP_PATH="$(find src-tauri/target -path '*/release/bundle/macos/Aperio.app' -print -quit)"
+          if [ -z "$APP_PATH" ] || [ ! -d "$APP_PATH" ]; then
+            echo "::error::Aperio.app not found under src-tauri/target/**/release/bundle/macos/"
+            exit 1
+          fi
+          VERSION="${GITHUB_REF_NAME#v}"
+          ARCHIVE="Aperio_${VERSION}_${{ matrix.name }}.app.tar.gz"
+          tar -czf "$ARCHIVE" -C "$(dirname "$APP_PATH")" "$(basename "$APP_PATH")"
+          echo "ARCHIVE_PATH=$ARCHIVE" >> "$GITHUB_ENV"
+
+      - name: Upload macOS .app.tar.gz to release
+        if: matrix.platform == 'macos-latest'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh release upload "${{ github.ref_name }}" "$ARCHIVE_PATH" --clobber

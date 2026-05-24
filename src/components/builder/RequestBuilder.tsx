@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Loader2, Send, Terminal } from "lucide-react";
 import { KeyValueTable } from "../common/KeyValueTable";
@@ -11,9 +11,15 @@ import {
   rowsToHeadersJson,
   type KeyValueRow,
 } from "../../lib/keyValueRows";
+import {
+  applyPathParams,
+  emptyPathParamValues,
+  extractPathParamsFromUrl,
+} from "../../lib/pathParams";
 import type { RequestDraft } from "../../types/history";
 import { CurlImportModal } from "./CurlImportModal";
 import { ExportRequestMenu } from "./ExportRequestMenu";
+import { PathParamsTable } from "./PathParamsTable";
 
 const HTTP_METHODS = [
   "GET",
@@ -49,6 +55,7 @@ function methodOptions(current: string): string[] {
 
 interface RequestBuilderProps {
   draft: RequestDraft;
+  pathParams?: string[];
   onDraftChange: (draft: RequestDraft) => void;
   onSend: (payload: RequestDraft) => void;
   onCurlImported?: () => void;
@@ -57,6 +64,7 @@ interface RequestBuilderProps {
 
 export function RequestBuilder({
   draft,
+  pathParams = [],
   onDraftChange,
   onSend,
   onCurlImported,
@@ -64,11 +72,23 @@ export function RequestBuilder({
 }: RequestBuilderProps) {
   const { t } = useTranslation();
   const [curlModalOpen, setCurlModalOpen] = useState(false);
+  const [pathParamValues, setPathParamValues] = useState<Record<string, string>>(
+    {},
+  );
 
   const { baseUrl, queryRows } = useMemo(
     () => parseRequestUrl(draft.url),
     [draft.url],
   );
+  const effectivePathParams = useMemo(() => {
+    if (pathParams.length > 0) return pathParams;
+    return extractPathParamsFromUrl(baseUrl);
+  }, [pathParams, baseUrl]);
+  const pathParamsKey = effectivePathParams.join("\0");
+
+  useEffect(() => {
+    setPathParamValues(emptyPathParamValues(effectivePathParams));
+  }, [pathParamsKey]);
   const headerRows = useMemo(
     () => headersToRows(draft.headers),
     [draft.headers],
@@ -80,7 +100,10 @@ export function RequestBuilder({
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    onSend(draft);
+    onSend({
+      ...draft,
+      url: applyPathParams(draft.url, pathParamValues),
+    });
   }
 
   function handleCurlImported(imported: RequestDraft) {
@@ -102,6 +125,14 @@ export function RequestBuilder({
     update("headers", rowsToHeadersJson(rows));
   }
 
+  const exportDraft = useMemo(
+    () => ({
+      ...draft,
+      url: applyPathParams(draft.url, pathParamValues),
+    }),
+    [draft, pathParamValues],
+  );
+
   return (
     <section
       data-testid="layout-builder"
@@ -112,7 +143,7 @@ export function RequestBuilder({
           {t("builder.title")}
         </h1>
         <div className="flex items-center gap-2">
-          <ExportRequestMenu draft={draft} disabled={loading} />
+          <ExportRequestMenu draft={exportDraft} disabled={loading} />
           <button
             type="button"
             onClick={() => setCurlModalOpen(true)}
@@ -186,6 +217,19 @@ export function RequestBuilder({
           />
         </fieldset>
 
+        {effectivePathParams.length > 0 && (
+          <fieldset className="flex flex-col gap-2">
+            <legend className="mb-1 text-xs font-medium uppercase tracking-wider text-foreground/50">
+              {t("builder.pathParams")}
+            </legend>
+            <PathParamsTable
+              paramNames={effectivePathParams}
+              values={pathParamValues}
+              onChange={setPathParamValues}
+            />
+          </fieldset>
+        )}
+
         <fieldset className="flex flex-col gap-2">
           <legend className="mb-1 text-xs font-medium uppercase tracking-wider text-foreground/50">
             {t("builder.headers")}
@@ -204,7 +248,7 @@ export function RequestBuilder({
           <VariableTextarea
             value={draft.body}
             onChange={(body) => update("body", body)}
-            placeholder="{}"
+            placeholder={t("builder.bodyPlaceholder")}
             spellCheck={false}
           />
         </fieldset>

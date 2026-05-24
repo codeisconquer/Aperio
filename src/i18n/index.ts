@@ -26,6 +26,15 @@ void i18n.use(initReactI18next).init({
   interpolation: { escapeValue: false },
 });
 
+function syncDocumentTitle() {
+  if (typeof document !== "undefined") {
+    document.title = i18n.t("app.title");
+  }
+}
+
+syncDocumentTitle();
+i18n.on("languageChanged", syncDocumentTitle);
+
 export function setLanguage(lang: "de" | "en") {
   if (typeof localStorage !== "undefined") {
     localStorage.setItem(STORAGE_KEY, lang);

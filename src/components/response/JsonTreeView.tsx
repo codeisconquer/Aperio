@@ -1,4 +1,6 @@
 import { useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
+import type { TFunction } from "i18next";
 import { ChevronDown, ChevronRight } from "lucide-react";
 
 type JsonValue =
@@ -13,14 +15,16 @@ interface JsonTreeViewProps {
   data: JsonValue;
 }
 
-function valuePreview(value: JsonValue): string {
-  if (value === null) return "null";
+function valuePreview(value: JsonValue, t: TFunction): string {
+  if (value === null) return t("response.jsonTree.null");
   if (typeof value === "string") return `"${value}"`;
   if (typeof value === "boolean" || typeof value === "number") {
     return String(value);
   }
-  if (Array.isArray(value)) return `Array(${value.length})`;
-  return `Object(${Object.keys(value).length})`;
+  if (Array.isArray(value)) {
+    return t("response.jsonTree.array", { count: value.length });
+  }
+  return t("response.jsonTree.object", { count: Object.keys(value).length });
 }
 
 function JsonNode({
@@ -28,11 +32,13 @@ function JsonNode({
   value,
   depth,
   isLast,
+  t,
 }: {
   name?: string;
   value: JsonValue;
   depth: number;
   isLast?: boolean;
+  t: TFunction;
 }) {
   const [open, setOpen] = useState(depth < 2);
   const isObject = value !== null && typeof value === "object";
@@ -55,7 +61,7 @@ function JsonNode({
           <span className="text-accent">"{name}"</span>
         )}
         {name !== undefined && <span className="text-foreground/50">: </span>}
-        <span className="text-warning">{valuePreview(value)}</span>
+        <span className="text-warning">{valuePreview(value, t)}</span>
         <span className="text-foreground/40">{comma}</span>
       </div>
     );
@@ -87,7 +93,7 @@ function JsonNode({
           {!open && (
             <span className="text-foreground/40">
               {" "}
-              {isArray ? `${value.length} items` : "…"}
+              {isArray ? t("response.jsonTree.items", { count: value.length }) : "…"}
               {" "}
             </span>
           )}
@@ -114,6 +120,7 @@ function JsonNode({
                 value={childValue}
                 depth={depth + 1}
                 isLast={index === entries.length - 1}
+                t={t}
               />
             ))}
         </div>
@@ -133,6 +140,7 @@ function JsonNode({
 }
 
 export function JsonTreeView({ data }: JsonTreeViewProps) {
+  const { t } = useTranslation();
   const isArray = Array.isArray(data);
   const isObject = data !== null && typeof data === "object";
   const entries = isObject
@@ -144,7 +152,7 @@ export function JsonTreeView({ data }: JsonTreeViewProps) {
   if (!isObject) {
     return (
       <div className="rounded-md border border-white/10 bg-background p-3 font-mono text-xs text-warning">
-        {valuePreview(data)}
+        {valuePreview(data, t)}
       </div>
     );
   }
@@ -159,6 +167,7 @@ export function JsonTreeView({ data }: JsonTreeViewProps) {
           value={value}
           depth={1}
           isLast={index === entries.length - 1}
+          t={t}
         />
       ))}
       <div className="font-mono text-xs text-foreground/50">{isArray ? "]" : "}"}</div>

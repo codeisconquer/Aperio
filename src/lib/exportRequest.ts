@@ -2,6 +2,7 @@ import { invoke } from "@tauri-apps/api/core";
 import { writeText } from "@tauri-apps/plugin-clipboard-manager";
 import type { ExportCommands } from "../types/export";
 import type { RequestDraft } from "../types/history";
+import { CLIPBOARD_UNAVAILABLE } from "./uiError";
 
 export async function exportRequestCommands(
   draft: RequestDraft,
@@ -21,7 +22,7 @@ export async function copyToClipboard(text: string): Promise<void> {
     await writeText(text);
   } catch {
     if (!navigator.clipboard?.writeText) {
-      throw new Error("Clipboard is not available");
+      throw new Error(CLIPBOARD_UNAVAILABLE);
     }
     await navigator.clipboard.writeText(text);
   }

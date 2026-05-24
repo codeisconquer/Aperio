@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import { formatResponseBody } from "../../lib/formatBody";
 import { copyToClipboard } from "../../lib/exportRequest";
+import { formatUiError } from "../../lib/uiError";
 import {
   buildImageDataUrl,
   defaultResponseFilename,
@@ -71,9 +72,13 @@ export function ResponseViewer({
 
   async function handleCopyBody() {
     if (!displayBody || isImage) return;
-    await copyToClipboard(displayBody);
-    setCopied(true);
-    window.setTimeout(() => setCopied(false), 1500);
+    try {
+      await copyToClipboard(displayBody);
+      setCopied(true);
+      window.setTimeout(() => setCopied(false), 1500);
+    } catch (err) {
+      console.error(formatUiError(err instanceof Error ? err.message : String(err), t));
+    }
   }
 
   async function handleSaveBody() {

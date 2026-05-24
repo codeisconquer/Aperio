@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { FileUp, Globe, Loader2, X } from "lucide-react";
+import { isTauriDialogCancel } from "../../lib/tauriDialog";
 import {
   importSwaggerFile,
   importSwaggerFromUrl,
@@ -36,7 +37,7 @@ export function OpenApiImportModal({
       onImported(project);
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
-      if (message !== "Import cancelled") {
+      if (!isTauriDialogCancel(message)) {
         setError(message);
       }
     } finally {

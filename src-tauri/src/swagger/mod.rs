@@ -260,6 +260,29 @@ fn schema_example_value(schema: &Schema) -> Option<Value> {
     })
 }
 
+fn properties_to_json_map<'a>(
+    spec: &OpenAPI,
+    properties: impl Iterator<Item = (&'a String, &'a ReferenceOr<Box<Schema>>)>,
+    depth: usize,
+) -> Map<String, Value> {
+    let mut map = Map::new();
+    for (name, property) in properties {
+        let value = property_to_json_value(spec, property, depth);
+        map.insert(name.clone(), value);
+    }
+    map
+}
+
+fn property_to_json_value(
+    spec: &OpenAPI,
+    property: &ReferenceOr<Box<Schema>>,
+    depth: usize,
+) -> Value {
+    resolve_boxed_schema(spec, property)
+        .and_then(|resolved| schema_to_json_value(spec, resolved, depth + 1))
+        .unwrap_or_else(|| json!(""))
+}
+
 fn schema_to_json_value(spec: &OpenAPI, schema: &Schema, depth: usize) -> Option<Value> {
     if depth > MAX_SCHEMA_DEPTH {
         return None;
@@ -270,16 +293,11 @@ fn schema_to_json_value(spec: &OpenAPI, schema: &Schema, depth: usize) -> Option
     }
 
     match &schema.schema_kind {
-        SchemaKind::Type(Type::Object(object)) => {
-            let mut map = Map::new();
-            for (name, property) in &object.properties {
-                let resolved = resolve_boxed_schema(spec, property)?;
-                let value = schema_to_json_value(spec, resolved, depth + 1)
-                    .unwrap_or(Value::Null);
-                map.insert(name.clone(), value);
-            }
-            Some(Value::Object(map))
-        }
+        SchemaKind::Type(Type::Object(object)) => Some(Value::Object(properties_to_json_map(
+            spec,
+            object.properties.iter(),
+            depth,
+        ))),
         SchemaKind::Type(Type::String(_)) => Some(json!("")),
         SchemaKind::Type(Type::Integer(_)) => Some(json!(0)),
         SchemaKind::Type(Type::Number(_)) => Some(json!(0)),
@@ -301,26 +319,78 @@ fn schema_to_json_value(spec: &OpenAPI, schema: &Schema, depth: usize) -> Option
             .first()
             .and_then(|variant| resolve_schema(spec, variant))
             .and_then(|variant| schema_to_json_value(spec, variant, depth + 1)),
-        SchemaKind::AllOf { all_of } => {
-            let mut map = Map::new();
-            for variant in all_of {
-                let Some(resolved) = resolve_schema(spec, variant) else {
-                    continue;
-                };
-                let Some(Value::Object(properties)) =
-                    schema_to_json_value(spec, resolved, depth + 1)
-                else {
-                    continue;
-                };
-                map.extend(properties);
-            }
-            if map.is_empty() {
-                None
-            } else {
-                Some(Value::Object(map))
-            }
-        }
-        SchemaKind::Not { .. } | SchemaKind::Any(_) => None,
+        SchemaKind::AllOf { all_of } => merge_all_of_variants(spec, all_of, depth),
+        SchemaKind::Any(any) => schema_any_to_json_value(spec, any, depth),
+        SchemaKind::Not { .. } => None,
+    }
+}
+
+fn merge_all_of_variants(
+    spec: &OpenAPI,
+    all_of: &[ReferenceOr<Schema>],
+    depth: usize,
+) -> Option<Value> {
+    let mut map = Map::new();
+    for variant in all_of {
+        let Some(resolved) = resolve_schema(spec, variant) else {
+            continue;
+        };
+        let Some(Value::Object(properties)) = schema_to_json_value(spec, resolved, depth + 1) else {
+            continue;
+        };
+        map.extend(properties);
+    }
+    if map.is_empty() {
+        None
+    } else {
+        Some(Value::Object(map))
+    }
+}
+
+fn schema_any_to_json_value(
+    spec: &OpenAPI,
+    any: &openapiv3::AnySchema,
+    depth: usize,
+) -> Option<Value> {
+    if !any.all_of.is_empty() {
+        return merge_all_of_variants(spec, &any.all_of, depth);
+    }
+    if !any.one_of.is_empty() {
+        return any
+            .one_of
+            .first()
+            .and_then(|variant| resolve_schema(spec, variant))
+            .and_then(|variant| schema_to_json_value(spec, variant, depth + 1));
+    }
+    if !any.any_of.is_empty() {
+        return any
+            .any_of
+            .first()
+            .and_then(|variant| resolve_schema(spec, variant))
+            .and_then(|variant| schema_to_json_value(spec, variant, depth + 1));
+    }
+    if !any.properties.is_empty() {
+        return Some(Value::Object(properties_to_json_map(
+            spec,
+            any.properties.iter(),
+            depth,
+        )));
+    }
+    if let Some(items) = &any.items {
+        let item = resolve_boxed_schema(spec, items)
+            .and_then(|resolved| schema_to_json_value(spec, resolved, depth + 1))
+            .unwrap_or(Value::Null);
+        return Some(json!([item]));
+    }
+
+    match any.typ.as_deref() {
+        Some("object") => Some(json!({})),
+        Some("string") => Some(json!("")),
+        Some("integer") => Some(json!(0)),
+        Some("number") => Some(json!(0)),
+        Some("boolean") => Some(json!(false)),
+        Some("array") => Some(json!([])),
+        _ => None,
     }
 }
 
@@ -640,6 +710,201 @@ paths:
         "200":
           description: OK
 "#;
+
+    #[test]
+    fn generates_default_body_for_empty_nested_object() {
+        const YAML: &str = r#"
+openapi: 3.0.0
+info:
+  title: User API
+  version: 1.0.0
+paths:
+  /users:
+    put:
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                firstname:
+                  type: string
+                metadata:
+                  type: object
+      responses:
+        "200":
+          description: OK
+"#;
+
+        let project = parse_openapi_project(YAML, "yaml").expect("parse yaml");
+        let put = project.endpoints.first().expect("put endpoint");
+        let body = put.default_body.as_deref().expect("default body");
+        let parsed: Value = serde_json::from_str(body).expect("valid json body");
+        assert_eq!(parsed["firstname"], json!(""));
+        assert_eq!(parsed["metadata"], json!({}));
+        assert!(body.contains('\n'), "body should be pretty-printed");
+    }
+
+    #[test]
+    fn generates_default_body_when_object_type_is_omitted() {
+        const YAML: &str = r#"
+openapi: 3.0.0
+info:
+  title: User API
+  version: 1.0.0
+paths:
+  /users:
+    post:
+      requestBody:
+        content:
+          application/json:
+            schema:
+              properties:
+                firstname:
+                  type: string
+                lastname:
+                  type: string
+      responses:
+        "201":
+          description: Created
+"#;
+
+        let project = parse_openapi_project(YAML, "yaml").expect("parse yaml");
+        let post = project.endpoints.first().expect("post endpoint");
+        let body = post.default_body.as_deref().expect("default body");
+        let parsed: Value = serde_json::from_str(body).expect("valid json body");
+        assert_eq!(parsed["firstname"], json!(""));
+        assert_eq!(parsed["lastname"], json!(""));
+    }
+
+    #[test]
+    fn generates_default_body_for_all_of_schema_merge() {
+        const YAML: &str = r#"
+openapi: 3.0.0
+info:
+  title: User API
+  version: 1.0.0
+components:
+  schemas:
+    Person:
+      type: object
+      properties:
+        firstname:
+          type: string
+    User:
+      allOf:
+        - $ref: '#/components/schemas/Person'
+        - type: object
+          properties:
+            lastname:
+              type: string
+paths:
+  /users:
+    post:
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/User'
+      responses:
+        "201":
+          description: Created
+"#;
+
+        let project = parse_openapi_project(YAML, "yaml").expect("parse yaml");
+        let post = project.endpoints.first().expect("post endpoint");
+        let body = post.default_body.as_deref().expect("default body");
+        let parsed: Value = serde_json::from_str(body).expect("valid json body");
+        assert_eq!(parsed["firstname"], json!(""));
+        assert_eq!(parsed["lastname"], json!(""));
+    }
+
+    #[test]
+    fn generates_default_body_for_ref_schema_with_firstname_lastname() {
+        const YAML: &str = r#"
+openapi: 3.0.0
+info:
+  title: User API
+  version: 1.0.0
+paths:
+  /users:
+    post:
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateUser'
+      responses:
+        "201":
+          description: Created
+components:
+  schemas:
+    CreateUser:
+      type: object
+      required:
+        - firstname
+        - lastname
+      properties:
+        firstname:
+          type: string
+        lastname:
+          type: string
+"#;
+
+        let project = parse_openapi_project(YAML, "yaml").expect("parse yaml");
+        let post = project
+            .endpoints
+            .iter()
+            .find(|endpoint| endpoint.method == "POST")
+            .expect("post endpoint");
+
+        let body = post.default_body.as_deref().expect("default body");
+        let parsed: Value = serde_json::from_str(body).expect("valid json body");
+        assert_eq!(parsed["firstname"], json!(""));
+        assert_eq!(parsed["lastname"], json!(""));
+        assert!(body.contains('\n'), "body should be pretty-printed");
+    }
+
+    #[test]
+    fn generates_default_body_for_nested_object_properties() {
+        const YAML: &str = r#"
+openapi: 3.0.0
+info:
+  title: User API
+  version: 1.0.0
+paths:
+  /users:
+    put:
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                firstname:
+                  type: string
+                address:
+                  type: object
+                  properties:
+                    street:
+                      type: string
+                    city:
+                      type: string
+      responses:
+        "200":
+          description: OK
+"#;
+
+        let project = parse_openapi_project(YAML, "yaml").expect("parse yaml");
+        let put = project.endpoints.first().expect("put endpoint");
+        let body = put.default_body.as_deref().expect("default body");
+        let parsed: Value = serde_json::from_str(body).expect("valid json body");
+        assert_eq!(parsed["firstname"], json!(""));
+        assert!(parsed["address"].is_object());
+        assert_eq!(parsed["address"]["street"], json!(""));
+        assert_eq!(parsed["address"]["city"], json!(""));
+    }
 
     #[test]
     fn generates_default_body_for_post_with_json_schema() {

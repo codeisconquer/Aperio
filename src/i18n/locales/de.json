@@ -2,6 +2,9 @@
   "app": {
     "title": "Aperio"
   },
+  "common": {
+    "clipboardUnavailable": "Zwischenablage ist nicht verfügbar"
+  },
   "environments": {
     "label": "Umgebung",
     "none": "Keine Umgebung",
@@ -18,7 +21,6 @@
     "delete": "Löschen"
   },
   "sidebar": {
-    "title": "Sammlungen",
     "history": "Verlauf",
     "projects": "Projekträume",
     "empty": "Noch keine Requests",
@@ -50,6 +52,8 @@
     "open": "Export",
     "copyCurl": "Als cURL kopieren",
     "copyWget": "Als wget kopieren",
+    "copyPython": "Als Python (requests) kopieren",
+    "copyNode": "Als Node.js (fetch) kopieren",
     "openSnippets": "Code-Snippets generieren",
     "modalTitle": "Request exportieren",
     "close": "Schließen",
@@ -57,6 +61,8 @@
     "copied": "Kopiert",
     "copiedCurl": "cURL-Befehl in die Zwischenablage kopiert",
     "copiedWget": "wget-Befehl in die Zwischenablage kopiert",
+    "copiedPython": "Python-Code in die Zwischenablage kopiert!",
+    "copiedNode": "Node.js-Code in die Zwischenablage kopiert!",
     "noUrl": "Bitte zuerst eine URL eingeben",
     "tabs": {
       "curl": "cURL",
@@ -82,8 +88,11 @@
     "url": "URL",
     "urlPlaceholder": "https://api.example.com/endpoint",
     "queryParams": "Query-Parameter",
+    "pathParams": "Pfad-Variablen",
+    "pathParamValuePlaceholder": "Wert eingeben…",
     "headers": "Header",
     "body": "Body",
+    "bodyPlaceholder": "{}",
     "send": "Senden",
     "sending": "Sende…",
     "table": {
@@ -108,7 +117,13 @@
     "save": "Antwort speichern",
     "viewTree": "Baum",
     "viewRaw": "Raw",
-    "imagePreview": "Antwortbild"
+    "imagePreview": "Antwortbild",
+    "jsonTree": {
+      "null": "null",
+      "array": "Array({{count}})",
+      "object": "Object({{count}})",
+      "items": "{{count}} Elemente"
+    }
   },
   "settings": {
     "title": "Workspace",

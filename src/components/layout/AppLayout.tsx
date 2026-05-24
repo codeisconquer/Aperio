@@ -204,6 +204,21 @@ export function AppLayout() {
     setError(null);
   }, []);
 
+  const activePathParams = useMemo(() => {
+    if (!selectedEndpointKey) return [];
+    for (const project of projects) {
+      for (const endpoint of project.endpoints) {
+        if (
+          endpointKey(project.id, endpoint.method, endpoint.path) ===
+          selectedEndpointKey
+        ) {
+          return endpoint.path_params;
+        }
+      }
+    }
+    return [];
+  }, [projects, selectedEndpointKey]);
+
   const handleSend = useCallback(
     async (payload: RequestDraft) => {
       setLoading(true);
@@ -251,6 +266,7 @@ export function AppLayout() {
         />
         <RequestBuilder
           draft={draft}
+          pathParams={activePathParams}
           onDraftChange={setDraft}
           onSend={handleSend}
           onCurlImported={handleCurlImported}

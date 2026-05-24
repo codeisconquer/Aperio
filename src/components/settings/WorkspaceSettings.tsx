@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Download, Loader2, Upload } from "lucide-react";
 import { exportWorkspace, importWorkspace } from "../../lib/workspace";
+import { isTauriDialogCancel } from "../../lib/tauriDialog";
 
 interface WorkspaceSettingsProps {
   onImported: () => void;
@@ -23,7 +24,7 @@ export function WorkspaceSettings({ onImported }: WorkspaceSettingsProps) {
       setMessage(t("settings.exportSuccess"));
     } catch (err) {
       const text = err instanceof Error ? err.message : String(err);
-      if (text !== "Export cancelled") setError(text);
+      if (!isTauriDialogCancel(text)) setError(text);
     } finally {
       setExporting(false);
     }
@@ -39,7 +40,7 @@ export function WorkspaceSettings({ onImported }: WorkspaceSettingsProps) {
       onImported();
     } catch (err) {
       const text = err instanceof Error ? err.message : String(err);
-      if (text !== "Import cancelled") setError(text);
+      if (!isTauriDialogCancel(text)) setError(text);
     } finally {
       setImporting(false);
     }

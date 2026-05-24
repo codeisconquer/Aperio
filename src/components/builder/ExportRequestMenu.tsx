@@ -2,10 +2,12 @@ import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Check, ChevronDown, Code2, Copy, Loader2 } from "lucide-react";
 import { copyToClipboard, exportRequestCommands } from "../../lib/exportRequest";
+import { generateNodeFetch, generatePythonRequests } from "../../lib/codeGen";
+import { formatUiError } from "../../lib/uiError";
 import type { RequestDraft } from "../../types/history";
 import { ExportSnippetsModal } from "./ExportSnippetsModal";
 
-type CopiedKind = "curl" | "wget" | null;
+type CopiedKind = "curl" | "wget" | "python" | "node" | null;
 
 interface ExportRequestMenuProps {
   draft: RequestDraft;
@@ -51,17 +53,31 @@ export function ExportRequestMenu({ draft, disabled }: ExportRequestMenuProps) {
     setLoading(true);
     setError(null);
     try {
-      const commands = await exportRequestCommands(draft);
-      const text = kind === "curl" ? commands.curl : commands.wget;
+      let text: string;
+      if (kind === "python") {
+        text = generatePythonRequests(draft);
+      } else if (kind === "node") {
+        text = generateNodeFetch(draft);
+      } else {
+        const commands = await exportRequestCommands(draft);
+        text = kind === "curl" ? commands.curl : commands.wget;
+      }
+
       await copyToClipboard(text);
       setCopied(kind);
       setToast(
-        kind === "curl" ? t("export.copiedCurl") : t("export.copiedWget"),
+        kind === "curl"
+          ? t("export.copiedCurl")
+          : kind === "wget"
+            ? t("export.copiedWget")
+            : kind === "python"
+              ? t("export.copiedPython")
+              : t("export.copiedNode"),
       );
       setOpen(false);
       window.setTimeout(() => setCopied(null), 1500);
     } catch (err) {
-      setError(err instanceof Error ? err.message : String(err));
+      setError(formatUiError(err instanceof Error ? err.message : String(err), t));
     } finally {
       setLoading(false);
     }
@@ -96,7 +112,7 @@ export function ExportRequestMenu({ draft, disabled }: ExportRequestMenuProps) {
         {open && (
           <div
             role="menu"
-            className="absolute right-0 top-full z-20 mt-1 min-w-52 overflow-hidden rounded-md border border-white/10 bg-surface py-1 shadow-lg"
+            className="absolute right-0 top-full z-20 mt-1 min-w-64 overflow-hidden rounded-md border border-white/10 bg-surface py-1 shadow-lg"
           >
             <button
               type="button"
@@ -115,6 +131,24 @@ export function ExportRequestMenu({ draft, disabled }: ExportRequestMenuProps) {
               className="flex w-full px-3 py-2 text-left text-xs text-foreground hover:bg-background/60 disabled:opacity-50"
             >
               {t("export.copyWget")}
+            </button>
+            <button
+              type="button"
+              role="menuitem"
+              disabled={loading}
+              onClick={() => void handleQuickCopy("python")}
+              className="flex w-full px-3 py-2 text-left text-xs text-foreground hover:bg-background/60 disabled:opacity-50"
+            >
+              {t("export.copyPython")}
+            </button>
+            <button
+              type="button"
+              role="menuitem"
+              disabled={loading}
+              onClick={() => void handleQuickCopy("node")}
+              className="flex w-full px-3 py-2 text-left text-xs text-foreground hover:bg-background/60 disabled:opacity-50"
+            >
+              {t("export.copyNode")}
             </button>
             <div className="my-1 border-t border-white/10" />
             <button

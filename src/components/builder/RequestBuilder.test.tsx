@@ -9,15 +9,20 @@ import { RequestBuilder } from "./RequestBuilder";
 
 function RequestBuilderHarness({
   onSend,
+  pathParams = [],
+  initialDraft,
 }: {
   onSend: (payload: ReturnType<typeof emptyRequestDraft>) => void;
+  pathParams?: string[];
+  initialDraft?: ReturnType<typeof emptyRequestDraft>;
 }) {
-  const [draft, setDraft] = useState(emptyRequestDraft());
+  const [draft, setDraft] = useState(initialDraft ?? emptyRequestDraft());
 
   return (
     <I18nextProvider i18n={i18n}>
       <RequestBuilder
         draft={draft}
+        pathParams={pathParams}
         onDraftChange={setDraft}
         onSend={onSend}
         loading={false}
@@ -47,6 +52,36 @@ describe("RequestBuilder", () => {
       expect.objectContaining({
         method: "POST",
         url: "https://api.example.com/items",
+      }),
+    );
+  });
+
+  it("replaces path variables before sending", async () => {
+    const user = userEvent.setup();
+    const onSend = vi.fn();
+    render(
+      <RequestBuilderHarness
+        onSend={onSend}
+        pathParams={["username"]}
+        initialDraft={{
+          method: "GET",
+          url: "http://example.com/api/v1/users/{username}",
+          headers: "",
+          body: "",
+        }}
+      />,
+    );
+
+    expect(screen.getByText("Path variables")).toBeInTheDocument();
+    await user.type(
+      screen.getByPlaceholderText(/enter value/i),
+      "jviebrock",
+    );
+    await user.click(screen.getByRole("button", { name: /send/i }));
+
+    expect(onSend).toHaveBeenCalledWith(
+      expect.objectContaining({
+        url: "http://example.com/api/v1/users/jviebrock",
       }),
     );
   });

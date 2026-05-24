@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Check, Copy, Loader2, X } from "lucide-react";
 import { copyToClipboard, exportRequestCommands } from "../../lib/exportRequest";
+import { formatUiError } from "../../lib/uiError";
 import type { ExportCommands, ExportSnippetTab } from "../../types/export";
 import type { RequestDraft } from "../../types/history";
 
@@ -51,7 +52,7 @@ export function ExportSnippetsModal({ draft, onClose }: ExportSnippetsModalProps
         if (!cancelled) setCommands(result);
       } catch (err) {
         if (!cancelled) {
-          setError(err instanceof Error ? err.message : String(err));
+          setError(formatUiError(err instanceof Error ? err.message : String(err), t));
         }
       } finally {
         if (!cancelled) setLoading(false);
