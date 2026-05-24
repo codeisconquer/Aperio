@@ -98,6 +98,7 @@ export async function installTauriMock(page: Page): Promise<void> {
           duration_ms: 42,
         };
       },
+      save_response_to_file: () => null,
     };
 
     (window as Window & { __TAURI_INTERNALS__?: unknown }).__TAURI_INTERNALS__ = {

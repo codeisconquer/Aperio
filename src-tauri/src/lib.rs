@@ -46,11 +46,14 @@ pub fn run() {
             crypto::ensure_master_key()?;
             let pool = database::init_db(app.handle())?;
             app.manage(pool);
+            let http_client = http::build_http_client()?;
+            app.manage(http_client);
             handle_cli_import(app);
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
             http::send_request,
+            http::save_response::save_response_to_file,
             http::parse_curl_command,
             http::export_request_commands_cmd,
             database::get_history,

@@ -104,7 +104,11 @@
     "ms": "ms",
     "noBody": "(leer)",
     "copyBody": "Kopieren",
-    "copied": "Kopiert"
+    "copied": "Kopiert",
+    "save": "Antwort speichern",
+    "viewTree": "Baum",
+    "viewRaw": "Raw",
+    "imagePreview": "Antwortbild"
   },
   "settings": {
     "title": "Workspace",

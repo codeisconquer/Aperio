@@ -1,16 +1,34 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { AlertCircle, Check, Copy, Inbox, Loader2 } from "lucide-react";
+import {
+  AlertCircle,
+  Check,
+  Copy,
+  Download,
+  Inbox,
+  Loader2,
+} from "lucide-react";
 import { formatResponseBody } from "../../lib/formatBody";
 import { copyToClipboard } from "../../lib/exportRequest";
+import {
+  buildImageDataUrl,
+  defaultResponseFilename,
+  getContentType,
+  isImageContentType,
+  isJsonResponse,
+  responseBodyToBytes,
+} from "../../lib/responseContent";
+import { saveResponseToFile } from "../../lib/saveResponse";
 import type { HttpResponse } from "../../types/http";
-import { JsonTreeViewFromText } from "./JsonTreeView";
+import { JsonTreeView, tryParseJson } from "./JsonTreeView";
 
 interface ResponseViewerProps {
   response: HttpResponse | null;
   error: string | null;
   loading: boolean;
 }
+
+type BodyViewMode = "tree" | "raw";
 
 function statusColor(status: number): string {
   if (status >= 200 && status < 300) return "text-success";
@@ -26,17 +44,87 @@ export function ResponseViewer({
 }: ResponseViewerProps) {
   const { t } = useTranslation();
   const [copied, setCopied] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [bodyViewMode, setBodyViewMode] = useState<BodyViewMode>("tree");
   const showEmpty = !loading && !response && !error;
 
+  const contentType = useMemo(
+    () => (response ? getContentType(response.headers) : null),
+    [response],
+  );
+
+  const isImage = isImageContentType(contentType);
+  const isJson = response
+    ? isJsonResponse(response.body, contentType) && !isImage
+    : false;
+
   const displayBody = response
-    ? formatResponseBody(response.body) || response.body
+    ? isImage
+      ? response.body
+      : formatResponseBody(response.body) || response.body
     : "";
 
+  const parsedJson = useMemo(
+    () => (isJson ? tryParseJson(displayBody) : null),
+    [displayBody, isJson],
+  );
+
   async function handleCopyBody() {
-    if (!displayBody) return;
+    if (!displayBody || isImage) return;
     await copyToClipboard(displayBody);
     setCopied(true);
     window.setTimeout(() => setCopied(false), 1500);
+  }
+
+  async function handleSaveBody() {
+    if (!response || !displayBody) return;
+    setSaving(true);
+    try {
+      const bytes = responseBodyToBytes(response.body, contentType);
+      await saveResponseToFile(bytes, defaultResponseFilename(contentType));
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      if (!message.toLowerCase().includes("cancel")) {
+        console.error("Failed to save response:", err);
+      }
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  function renderBody() {
+    if (!response || !displayBody) {
+      return (
+        <p className="text-xs text-foreground/40">{t("response.noBody")}</p>
+      );
+    }
+
+    if (isImage && contentType) {
+      return (
+        <img
+          src={buildImageDataUrl(contentType, response.body)}
+          alt={t("response.imagePreview")}
+          className="max-h-full max-w-full rounded-md border border-white/10 bg-background object-contain"
+        />
+      );
+    }
+
+    if (isJson && parsedJson !== null) {
+      if (bodyViewMode === "tree") {
+        return <JsonTreeView data={parsedJson} />;
+      }
+      return (
+        <pre className="rounded-md border border-white/10 bg-background p-3 font-mono text-xs leading-relaxed text-foreground whitespace-pre-wrap break-words">
+          {displayBody}
+        </pre>
+      );
+    }
+
+    return (
+      <pre className="rounded-md border border-white/10 bg-background p-3 font-mono text-xs leading-relaxed text-foreground whitespace-pre-wrap break-words">
+        {displayBody}
+      </pre>
+    );
   }
 
   return (
@@ -105,34 +193,75 @@ export function ResponseViewer({
           </div>
 
           <div className="flex min-h-0 flex-1 flex-col overflow-hidden p-4">
-            <div className="mb-2 flex items-center justify-between gap-2">
-              <span className="text-xs font-medium uppercase tracking-wider text-foreground/50">
-                {t("response.body")}
-              </span>
+            <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-medium uppercase tracking-wider text-foreground/50">
+                  {t("response.body")}
+                </span>
+                {isJson && (
+                  <div className="inline-flex rounded-md border border-white/10 bg-background/60 p-0.5">
+                    <button
+                      type="button"
+                      onClick={() => setBodyViewMode("tree")}
+                      className={`rounded px-2 py-0.5 text-[10px] font-medium transition-colors ${
+                        bodyViewMode === "tree"
+                          ? "bg-accent/20 text-accent"
+                          : "text-foreground/60 hover:text-foreground"
+                      }`}
+                    >
+                      {t("response.viewTree")}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setBodyViewMode("raw")}
+                      className={`rounded px-2 py-0.5 text-[10px] font-medium transition-colors ${
+                        bodyViewMode === "raw"
+                          ? "bg-accent/20 text-accent"
+                          : "text-foreground/60 hover:text-foreground"
+                      }`}
+                    >
+                      {t("response.viewRaw")}
+                    </button>
+                  </div>
+                )}
+              </div>
+
               {displayBody && (
-                <button
-                  type="button"
-                  onClick={() => void handleCopyBody()}
-                  title={t("response.copyBody")}
-                  className="inline-flex items-center gap-1 rounded-md border border-white/10 bg-background/60 px-2 py-1 text-[10px] font-medium text-foreground/70 transition-colors hover:border-accent/40 hover:text-accent"
-                >
-                  {copied ? (
-                    <Check className="size-3.5 text-success" aria-hidden />
-                  ) : (
-                    <Copy className="size-3.5" aria-hidden />
+                <div className="flex items-center gap-1">
+                  {!isImage && (
+                    <button
+                      type="button"
+                      onClick={() => void handleCopyBody()}
+                      title={t("response.copyBody")}
+                      className="inline-flex items-center gap-1 rounded-md border border-white/10 bg-background/60 px-2 py-1 text-[10px] font-medium text-foreground/70 transition-colors hover:border-accent/40 hover:text-accent"
+                    >
+                      {copied ? (
+                        <Check className="size-3.5 text-success" aria-hidden />
+                      ) : (
+                        <Copy className="size-3.5" aria-hidden />
+                      )}
+                      {copied ? t("response.copied") : t("response.copyBody")}
+                    </button>
                   )}
-                  {copied ? t("response.copied") : t("response.copyBody")}
-                </button>
+                  <button
+                    type="button"
+                    onClick={() => void handleSaveBody()}
+                    disabled={saving}
+                    title={t("response.save")}
+                    className="inline-flex items-center gap-1 rounded-md border border-white/10 bg-background/60 px-2 py-1 text-[10px] font-medium text-foreground/70 transition-colors hover:border-accent/40 hover:text-accent disabled:opacity-50"
+                  >
+                    {saving ? (
+                      <Loader2 className="size-3.5 animate-spin" aria-hidden />
+                    ) : (
+                      <Download className="size-3.5" aria-hidden />
+                    )}
+                    {t("response.save")}
+                  </button>
+                </div>
               )}
             </div>
 
-            <div className="min-h-0 flex-1 overflow-auto">
-              {displayBody ? (
-                <JsonTreeViewFromText body={displayBody} />
-              ) : (
-                <p className="text-xs text-foreground/40">{t("response.noBody")}</p>
-              )}
-            </div>
+            <div className="min-h-0 flex-1 overflow-auto">{renderBody()}</div>
           </div>
         </div>
       )}

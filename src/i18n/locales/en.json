@@ -104,7 +104,11 @@
     "ms": "ms",
     "noBody": "(empty)",
     "copyBody": "Copy",
-    "copied": "Copied"
+    "copied": "Copied",
+    "save": "Save response",
+    "viewTree": "Tree",
+    "viewRaw": "Raw",
+    "imagePreview": "Response image"
   },
   "settings": {
     "title": "Workspace",

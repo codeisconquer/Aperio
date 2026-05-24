@@ -31,7 +31,7 @@ keyring = "3"
 aes-gcm = "0.10"
 base64 = "0.22"
 hex = "0.4"
-reqwest = { version = "0.12", default-features = false, features = ["rustls-tls"] }
+reqwest = { version = "0.12", default-features = false, features = ["rustls-tls", "cookies"] }
 rusqlite = { version = "0.32", features = ["bundled", "backup"] }
 r2d2 = "0.8"
 r2d2_sqlite = "0.25"

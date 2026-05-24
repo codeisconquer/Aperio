@@ -3,7 +3,7 @@ mod code_snippets;
 mod curl_export;
 mod curl_import;
 
-pub use client::build_http_client;
+pub mod save_response;
 
 use std::collections::HashMap;
 use std::str::FromStr;
@@ -19,6 +19,8 @@ use crate::vault;
 
 pub use curl_export::{export_request_commands, ExportCommands, ExportRequestPayload};
 pub use curl_import::{parse_curl, ParsedCurlRequest};
+
+pub use client::{build_http_client, HttpClient};
 
 #[tauri::command]
 pub fn parse_curl_command(curl_string: String) -> Result<ParsedCurlRequest, String> {
@@ -91,6 +93,21 @@ pub fn apply_project_auth(
     Ok(())
 }
 
+fn response_content_type(headers: &HashMap<String, String>) -> Option<String> {
+    headers
+        .iter()
+        .find(|(name, _)| name.eq_ignore_ascii_case("content-type"))
+        .map(|(_, value)| value.split(';').next().unwrap_or(value).trim().to_lowercase())
+}
+
+fn encode_response_body(bytes: &[u8], content_type: Option<&str>) -> String {
+    if content_type.is_some_and(|ct| ct.starts_with("image/")) {
+        use base64::Engine;
+        return base64::engine::general_purpose::STANDARD.encode(bytes);
+    }
+    String::from_utf8_lossy(bytes).into_owned()
+}
+
 pub async fn execute_http_request(
     client: &Client,
     method_str: &str,
@@ -133,10 +150,12 @@ pub async fn execute_http_request(
         })
         .collect();
 
-    let body = response
-        .text()
+    let bytes = response
+        .bytes()
         .await
         .map_err(|e| format!("Failed to read response body: {e}"))?;
+    let content_type = response_content_type(&response_headers);
+    let body = encode_response_body(&bytes, content_type.as_deref());
 
     Ok(HttpResponse {
         status,
@@ -149,6 +168,7 @@ pub async fn execute_http_request(
 #[tauri::command]
 pub async fn send_request(
     pool: State<'_, DbPool>,
+    client: State<'_, HttpClient>,
     payload: SendRequestPayload,
 ) -> Result<HttpResponse, String> {
     let method_str = payload.method.trim().to_string();
@@ -159,9 +179,14 @@ pub async fn send_request(
     let mut headers = parse_headers(&headers_str)?;
     apply_project_auth(&pool, payload.project_id.as_deref(), &mut headers)?;
 
-    let client = build_http_client()?;
-    let http_response =
-        execute_http_request(&client, &method_str, &url_str, headers, &body_str).await?;
+    let http_response = execute_http_request(
+        client.inner(),
+        &method_str,
+        &url_str,
+        headers,
+        &body_str,
+    )
+    .await?;
 
     log_history_async(
         pool.inner().clone(),
@@ -219,5 +244,18 @@ mod tests {
 
         assert_eq!(response.status, 200);
         assert!(response.body.contains("\"ok\":true") || response.body.contains("\"ok\": true"));
+    }
+
+    #[test]
+    fn encode_response_body_base64_for_images() {
+        let png_header = [0x89, 0x50, 0x4e, 0x47];
+        let encoded = encode_response_body(&png_header, Some("image/png"));
+        assert_eq!(encoded, "iVBORw==");
+    }
+
+    #[test]
+    fn encode_response_body_utf8_for_text() {
+        let encoded = encode_response_body(b"hello", Some("text/plain"));
+        assert_eq!(encoded, "hello");
     }
 }
