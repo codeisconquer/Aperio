@@ -13,17 +13,21 @@ import type { SwaggerEndpoint, SwaggerProject } from "../../types/swagger";
 interface SidebarProps {
   environments: Environment[];
   activeEnvironmentId: string | null;
+  activeProjectId: string | null;
   onActiveEnvironmentChange: (id: string | null) => void;
   onCreateEnvironment: () => void;
   onEditEnvironment: (environment: Environment) => void;
   history: HistoryEntry[];
   selectedHistoryId: string | null;
   onHistorySelect: (entry: HistoryEntry) => void;
+  onHistoryDelete: (id: string) => void;
+  onHistoryClearAll: () => void;
   projects: SwaggerProject[];
-  projectsWithTokens: Set<string>;
   selectedEndpointKey: string | null;
   onOpenOpenApiImport: () => void;
-  onOpenVault: (project: SwaggerProject) => void;
+  onManageProject: (project: SwaggerProject) => void;
+  onCopyProject: (project: SwaggerProject) => void;
+  onRemoveProject: (project: SwaggerProject) => void;
   onEndpointSelect: (
     project: SwaggerProject,
     endpoint: SwaggerEndpoint,
@@ -34,17 +38,21 @@ interface SidebarProps {
 export function Sidebar({
   environments,
   activeEnvironmentId,
+  activeProjectId,
   onActiveEnvironmentChange,
   onCreateEnvironment,
   onEditEnvironment,
   history,
   selectedHistoryId,
   onHistorySelect,
+  onHistoryDelete,
+  onHistoryClearAll,
   projects,
-  projectsWithTokens,
   selectedEndpointKey,
   onOpenOpenApiImport,
-  onOpenVault,
+  onManageProject,
+  onCopyProject,
+  onRemoveProject,
   onEndpointSelect,
   onWorkspaceImported,
 }: SidebarProps) {
@@ -67,6 +75,7 @@ export function Sidebar({
       <EnvironmentSelector
         environments={environments}
         activeId={activeEnvironmentId}
+        projectSelected={activeProjectId !== null}
         onActiveChange={onActiveEnvironmentChange}
         onCreate={onCreateEnvironment}
         onEdit={onEditEnvironment}
@@ -82,6 +91,8 @@ export function Sidebar({
             entries={history}
             selectedId={selectedHistoryId}
             onSelect={onHistorySelect}
+            onDelete={onHistoryDelete}
+            onClearAll={onHistoryClearAll}
           />
         </CollapsibleSection>
 
@@ -91,10 +102,11 @@ export function Sidebar({
         >
           <ProjectsList
             projects={projects}
-            projectsWithTokens={projectsWithTokens}
             selectedEndpointKey={selectedEndpointKey}
             onOpenImport={onOpenOpenApiImport}
-            onOpenVault={onOpenVault}
+            onManageProject={onManageProject}
+            onCopyProject={onCopyProject}
+            onRemoveProject={onRemoveProject}
             onEndpointSelect={onEndpointSelect}
           />
         </CollapsibleSection>

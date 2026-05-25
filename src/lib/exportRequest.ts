@@ -1,8 +1,10 @@
-import { invoke } from "@tauri-apps/api/core";
+import { invoke, isTauri } from "@tauri-apps/api/core";
 import { writeText } from "@tauri-apps/plugin-clipboard-manager";
 import type { ExportCommands } from "../types/export";
 import type { RequestDraft } from "../types/history";
 import { CLIPBOARD_UNAVAILABLE } from "./uiError";
+
+export { resolveExportDraft } from "./resolveExportDraft";
 
 export async function exportRequestCommands(
   draft: RequestDraft,
@@ -18,12 +20,18 @@ export async function exportRequestCommands(
 }
 
 export async function copyToClipboard(text: string): Promise<void> {
-  try {
-    await writeText(text);
-  } catch {
-    if (!navigator.clipboard?.writeText) {
-      throw new Error(CLIPBOARD_UNAVAILABLE);
-    }
-    await navigator.clipboard.writeText(text);
+  if (!text) {
+    throw new Error(CLIPBOARD_UNAVAILABLE);
   }
+
+  if (isTauri()) {
+    await writeText(text);
+    return;
+  }
+
+  if (!navigator.clipboard?.writeText) {
+    throw new Error(CLIPBOARD_UNAVAILABLE);
+  }
+
+  await navigator.clipboard.writeText(text);
 }

@@ -10,6 +10,7 @@ pub struct Environment {
     pub id: String,
     pub name: String,
     pub variables: String,
+    pub project_id: Option<String>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -17,6 +18,7 @@ pub struct SaveEnvironmentPayload {
     pub id: Option<String>,
     pub name: String,
     pub variables: String,
+    pub project_id: Option<String>,
 }
 
 fn validate_variables_json(variables: &str) -> Result<(), String> {
@@ -35,13 +37,23 @@ fn validate_variables_json(variables: &str) -> Result<(), String> {
     Ok(())
 }
 
+fn normalize_project_id(project_id: Option<String>) -> Result<Option<String>, String> {
+    match project_id {
+        Some(value) if value.trim().is_empty() => Ok(None),
+        Some(value) => Ok(Some(value.trim().to_string())),
+        None => Ok(None),
+    }
+}
+
 pub fn fetch_environments(pool: &DbPool) -> Result<Vec<Environment>, String> {
     let conn = pool
         .get()
         .map_err(|e| format!("Failed to acquire database connection: {e}"))?;
 
     let mut stmt = conn
-        .prepare("SELECT id, name, variables FROM environments ORDER BY name ASC")
+        .prepare(
+            "SELECT id, name, variables, project_id FROM environments ORDER BY name ASC",
+        )
         .map_err(|e| format!("Failed to prepare environments query: {e}"))?;
 
     let rows = stmt
@@ -50,6 +62,7 @@ pub fn fetch_environments(pool: &DbPool) -> Result<Vec<Environment>, String> {
                 id: row.get(0)?,
                 name: row.get(1)?,
                 variables: row.get(2)?,
+                project_id: row.get(3)?,
             })
         })
         .map_err(|e| format!("Failed to query environments: {e}"))?;
@@ -65,6 +78,11 @@ pub fn save_environment(pool: &DbPool, payload: SaveEnvironmentPayload) -> Resul
     }
 
     validate_variables_json(&payload.variables)?;
+
+    let project_id = normalize_project_id(payload.project_id)?;
+    if project_id.is_none() {
+        return Err("Environment must belong to a project".into());
+    }
 
     let variables = if payload.variables.trim().is_empty() {
         "{}".to_string()
@@ -82,12 +100,13 @@ pub fn save_environment(pool: &DbPool, payload: SaveEnvironmentPayload) -> Resul
         .map_err(|e| format!("Failed to acquire database connection: {e}"))?;
 
     conn.execute(
-        "INSERT INTO environments (id, name, variables)
-         VALUES (?1, ?2, ?3)
+        "INSERT INTO environments (id, name, variables, project_id)
+         VALUES (?1, ?2, ?3, ?4)
          ON CONFLICT(id) DO UPDATE SET
             name = excluded.name,
-            variables = excluded.variables",
-        params![id, name, variables],
+            variables = excluded.variables,
+            project_id = excluded.project_id",
+        params![id, name, variables, project_id],
     )
     .map_err(|e| format!("Failed to save environment: {e}"))?;
 
@@ -95,6 +114,7 @@ pub fn save_environment(pool: &DbPool, payload: SaveEnvironmentPayload) -> Resul
         id,
         name: name.to_string(),
         variables,
+        project_id,
     })
 }
 
@@ -136,8 +156,8 @@ pub fn delete_environment_cmd(pool: State<'_, DbPool>, id: String) -> Result<(),
 mod tests {
     use super::*;
     use crate::database;
-    use r2d2_sqlite::SqliteConnectionManager;
     use r2d2::Pool;
+    use r2d2_sqlite::SqliteConnectionManager;
     use tempfile::TempDir;
 
     struct TestPool {
@@ -160,19 +180,21 @@ mod tests {
         let test = test_pool();
         let pool = &test.pool;
         let saved = save_environment(
-            &pool,
+            pool,
             SaveEnvironmentPayload {
                 id: None,
                 name: "Local".into(),
                 variables: r#"{"base_url":"http://localhost:3000"}"#.into(),
+                project_id: Some("project-1".into()),
             },
         )
         .expect("save");
 
-        let list = fetch_environments(&pool).expect("list");
+        let list = fetch_environments(pool).expect("list");
         assert_eq!(list.len(), 1);
         assert_eq!(list[0].id, saved.id);
         assert_eq!(list[0].name, "Local");
+        assert_eq!(list[0].project_id.as_deref(), Some("project-1"));
     }
 
     #[test]
@@ -180,14 +202,32 @@ mod tests {
         let test = test_pool();
         let pool = &test.pool;
         let err = save_environment(
-            &pool,
+            pool,
             SaveEnvironmentPayload {
                 id: None,
                 name: "Bad".into(),
                 variables: "[]".into(),
+                project_id: Some("project-1".into()),
             },
         )
         .expect_err("invalid");
         assert!(err.contains("JSON object"));
+    }
+
+    #[test]
+    fn requires_project_id() {
+        let test = test_pool();
+        let pool = &test.pool;
+        let err = save_environment(
+            pool,
+            SaveEnvironmentPayload {
+                id: None,
+                name: "Orphan".into(),
+                variables: "{}".into(),
+                project_id: None,
+            },
+        )
+        .expect_err("missing project");
+        assert!(err.contains("project"));
     }
 }

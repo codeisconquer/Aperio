@@ -12,7 +12,7 @@
 #   shasum -a 256 aperio-aarch64.app.tar.gz
 
 cask "aperio" do
-  version "0.1.5"
+  version "0.2.1"
 
   on_arm do
     sha256 "UPDATE_ME_ARM64_SHA256"
@@ -37,8 +37,8 @@ cask "aperio" do
   app "Aperio.app"
 
   zap trash: [
-    "~/Library/Application Support/com.aperio.app",
-    "~/Library/Caches/com.aperio.app",
-    "~/Library/Preferences/com.aperio.app.plist",
+    "~/Library/Application Support/de.viebrocksoftware.aperio",
+    "~/Library/Caches/de.viebrocksoftware.aperio",
+    "~/Library/Preferences/de.viebrocksoftware.aperio.plist",
   ]
 end

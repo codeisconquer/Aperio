@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Check, Copy, Loader2, X } from "lucide-react";
+import { generateNodeFetch, generatePythonRequests } from "../../lib/codeGen";
 import { copyToClipboard, exportRequestCommands } from "../../lib/exportRequest";
 import { formatUiError } from "../../lib/uiError";
 import type { ExportCommands, ExportSnippetTab } from "../../types/export";
@@ -11,7 +12,14 @@ interface ExportSnippetsModalProps {
   onClose: () => void;
 }
 
-const TABS: ExportSnippetTab[] = ["curl", "wget", "go", "rust"];
+const TABS: ExportSnippetTab[] = [
+  "curl",
+  "wget",
+  "go",
+  "rust",
+  "python",
+  "node",
+];
 
 function tabLabel(tab: ExportSnippetTab, t: (key: string) => string): string {
   switch (tab) {
@@ -23,11 +31,30 @@ function tabLabel(tab: ExportSnippetTab, t: (key: string) => string): string {
       return t("export.tabs.go");
     case "rust":
       return t("export.tabs.rust");
+    case "python":
+      return t("export.tabs.python");
+    case "node":
+      return t("export.tabs.node");
   }
 }
 
-function snippetForTab(commands: ExportCommands, tab: ExportSnippetTab): string {
-  return commands[tab];
+function snippetForTab(
+  commands: ExportCommands,
+  tab: ExportSnippetTab,
+  draft: RequestDraft,
+): string {
+  switch (tab) {
+    case "python":
+      return generatePythonRequests(draft);
+    case "node":
+      return generateNodeFetch(draft);
+    default:
+      return commands[tab];
+  }
+}
+
+function usesBackendCommands(tab: ExportSnippetTab): boolean {
+  return tab !== "python" && tab !== "node";
 }
 
 export function ExportSnippetsModal({ draft, onClose }: ExportSnippetsModalProps) {
@@ -37,6 +64,8 @@ export function ExportSnippetsModal({ draft, onClose }: ExportSnippetsModalProps
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [copiedTab, setCopiedTab] = useState<ExportSnippetTab | null>(null);
+  const [copyError, setCopyError] = useState<string | null>(null);
+  const [copying, setCopying] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -65,13 +94,35 @@ export function ExportSnippetsModal({ draft, onClose }: ExportSnippetsModalProps
   }, [draft, t]);
 
   async function handleCopy(tab: ExportSnippetTab) {
-    if (!commands) return;
-    await copyToClipboard(snippetForTab(commands, tab));
-    setCopiedTab(tab);
-    window.setTimeout(() => setCopiedTab(null), 1500);
+    const text = snippetForTab(
+      commands ?? { curl: "", wget: "", go: "", rust: "" },
+      tab,
+      draft,
+    );
+    if (!text.trim()) return;
+
+    setCopying(true);
+    setCopyError(null);
+    try {
+      await copyToClipboard(text);
+      setCopiedTab(tab);
+      window.setTimeout(() => setCopiedTab(null), 1500);
+    } catch (err) {
+      setCopyError(formatUiError(err instanceof Error ? err.message : String(err), t));
+    } finally {
+      setCopying(false);
+    }
   }
 
-  const activeSnippet = commands ? snippetForTab(commands, activeTab) : "";
+  const activeSnippet = snippetForTab(
+    commands ?? { curl: "", wget: "", go: "", rust: "" },
+    activeTab,
+    draft,
+  );
+
+  const showLoading = loading && usesBackendCommands(activeTab);
+  const canShowSnippet =
+    !error && (commands !== null || !usesBackendCommands(activeTab));
 
   return (
     <div
@@ -120,27 +171,30 @@ export function ExportSnippetsModal({ draft, onClose }: ExportSnippetsModalProps
         </div>
 
         <div className="flex min-h-0 flex-1 flex-col gap-3 p-4">
-          {loading && (
+          {showLoading && (
             <div className="flex flex-1 items-center justify-center py-12">
               <Loader2 className="size-8 animate-spin text-accent" />
             </div>
           )}
 
-          {!loading && error && (
+          {!showLoading && error && (
             <p className="text-sm text-red-300" role="alert">
               {error}
             </p>
           )}
 
-          {!loading && !error && commands && (
+          {canShowSnippet && (
             <>
-              <div className="flex justify-end">
+              <div className="flex flex-col items-end gap-1">
                 <button
                   type="button"
+                  disabled={copying || !activeSnippet}
                   onClick={() => void handleCopy(activeTab)}
-                  className="inline-flex items-center gap-1.5 rounded-md border border-accent/40 bg-accent/10 px-3 py-1.5 text-xs font-medium text-accent hover:bg-accent/20"
+                  className="inline-flex items-center gap-1.5 rounded-md border border-accent/40 bg-accent/10 px-3 py-1.5 text-xs font-medium text-accent hover:bg-accent/20 disabled:cursor-not-allowed disabled:opacity-50"
                 >
-                  {copiedTab === activeTab ? (
+                  {copying ? (
+                    <Loader2 className="size-3.5 animate-spin" aria-hidden />
+                  ) : copiedTab === activeTab ? (
                     <Check className="size-3.5" aria-hidden />
                   ) : (
                     <Copy className="size-3.5" aria-hidden />
@@ -149,9 +203,17 @@ export function ExportSnippetsModal({ draft, onClose }: ExportSnippetsModalProps
                     ? t("export.copied")
                     : t("export.copy")}
                 </button>
+                {copyError && (
+                  <p
+                    role="alert"
+                    className="max-w-full rounded-md border border-red-500/40 bg-red-500/10 px-2.5 py-1.5 text-[11px] leading-snug text-red-200"
+                  >
+                    {copyError}
+                  </p>
+                )}
               </div>
-              <pre className="max-h-[50vh] flex-1 overflow-auto rounded-md border border-white/10 bg-surface p-4 font-mono text-xs leading-relaxed text-foreground whitespace-pre-wrap break-words">
-                <code className="text-foreground/90">{activeSnippet}</code>
+              <pre className="max-h-[50vh] flex-1 overflow-auto rounded-md border border-white/10 bg-background p-4 font-mono text-xs leading-relaxed whitespace-pre-wrap break-words text-foreground">
+                <code>{activeSnippet}</code>
               </pre>
             </>
           )}

@@ -27,14 +27,55 @@ export function endpointKey(
   return `${projectId}:${method}:${path}`;
 }
 
+export function joinBaseUrlAndPath(baseUrl: string, path: string): string {
+  const base = baseUrl.trim().replace(/\/+$/, "");
+  const normalizedPath = path.trim().startsWith("/")
+    ? path.trim()
+    : `/${path.trim()}`;
+
+  if (!base) return normalizedPath;
+  if (/^https?:\/\//i.test(normalizedPath)) return normalizedPath;
+
+  if (normalizedPath === base || normalizedPath.startsWith(`${base}/`)) {
+    return normalizedPath;
+  }
+
+  if (base.startsWith("/")) {
+    return `${base}${normalizedPath}`;
+  }
+
+  return `${base}${normalizedPath}`;
+}
+
 export function buildEndpointUrl(
   baseUrl: string | null | undefined,
   path: string,
 ): string {
   if (!baseUrl?.trim()) return path;
-  const base = baseUrl.replace(/\/$/, "");
-  const normalizedPath = path.startsWith("/") ? path : `/${path}`;
-  return `${base}${normalizedPath}`;
+  return joinBaseUrlAndPath(baseUrl, path);
+}
+
+/** Uses {{base_url}} when a server URL was imported; path-only endpoints stay as-is. */
+export function buildEndpointRequestUrl(
+  baseUrl: string | null | undefined,
+  path: string,
+  queryParams: string[],
+): string {
+  const trimmedPath = path.trim();
+  if (/^https?:\/\//i.test(trimmedPath)) {
+    return appendQueryParamNames(trimmedPath, queryParams);
+  }
+
+  const pathPart = trimmedPath.startsWith("/")
+    ? trimmedPath
+    : `/${trimmedPath}`;
+
+  const trimmedBase = baseUrl?.trim();
+  if (!trimmedBase) {
+    return appendQueryParamNames(pathPart, queryParams);
+  }
+
+  return appendQueryParamNames(`{{base_url}}${pathPart}`, queryParams);
 }
 
 /** Appends OpenAPI/Postman query parameter names as empty-valued query pairs. */
@@ -99,7 +140,7 @@ export function endpointToRequestDraft(
 ): RequestDraft {
   return {
     method: endpoint.method,
-    url: buildEndpointUrlWithQuery(
+    url: buildEndpointRequestUrl(
       project.base_url,
       endpoint.path,
       endpoint.query_params,

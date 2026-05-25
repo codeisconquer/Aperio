@@ -1,8 +1,9 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { ChevronDown, ChevronRight, FileUp, Lock, LockOpen } from "lucide-react";
+import { ChevronDown, ChevronRight, FileUp } from "lucide-react";
+import { ProjectSettingsMenu } from "./ProjectSettingsMenu";
 import {
-  buildEndpointUrl,
+  buildEndpointRequestUrl,
   endpointKey,
   type SwaggerEndpoint,
   type SwaggerProject,
@@ -21,19 +22,21 @@ function methodBadgeColor(method: string): string {
 
 interface ProjectsListProps {
   projects: SwaggerProject[];
-  projectsWithTokens: Set<string>;
   selectedEndpointKey: string | null;
   onOpenImport: () => void;
-  onOpenVault: (project: SwaggerProject) => void;
+  onManageProject: (project: SwaggerProject) => void;
+  onCopyProject: (project: SwaggerProject) => void;
+  onRemoveProject: (project: SwaggerProject) => void;
   onEndpointSelect: (project: SwaggerProject, endpoint: SwaggerEndpoint) => void;
 }
 
 export function ProjectsList({
   projects,
-  projectsWithTokens,
   selectedEndpointKey,
   onOpenImport,
-  onOpenVault,
+  onManageProject,
+  onCopyProject,
+  onRemoveProject,
   onEndpointSelect,
 }: ProjectsListProps) {
   const { t } = useTranslation();
@@ -62,7 +65,6 @@ export function ProjectsList({
         <ul className="flex flex-col gap-1">
           {projects.map((project) => {
             const isOpen = expanded[project.id] ?? true;
-            const hasToken = projectsWithTokens.has(project.id);
             return (
               <li key={project.id} className="rounded-md bg-background/40">
                 <div className="flex items-center gap-0.5 pr-1">
@@ -86,20 +88,12 @@ export function ProjectsList({
                       v{project.version}
                     </span>
                   </button>
-                  <button
-                    type="button"
-                    onClick={() => onOpenVault(project)}
-                    title={t("vault.open")}
-                    className={`shrink-0 rounded p-1.5 transition-colors hover:bg-background/60 ${
-                      hasToken ? "text-warning" : "text-foreground/40"
-                    }`}
-                  >
-                    {hasToken ? (
-                      <Lock className="size-3.5" aria-hidden />
-                    ) : (
-                      <LockOpen className="size-3.5" aria-hidden />
-                    )}
-                  </button>
+                  <ProjectSettingsMenu
+                    project={project}
+                    onManageEnvironments={onManageProject}
+                    onCopyProject={onCopyProject}
+                    onRemoveProject={onRemoveProject}
+                  />
                 </div>
 
                 <div
@@ -126,9 +120,10 @@ export function ProjectsList({
                           <button
                             type="button"
                             onClick={() => onEndpointSelect(project, endpoint)}
-                            title={buildEndpointUrl(
+                            title={buildEndpointRequestUrl(
                               project.base_url,
                               endpoint.path,
+                              endpoint.query_params,
                             )}
                             className={`flex w-full items-start gap-2 rounded-md px-2 py-1.5 text-left transition-colors ${
                               isSelected

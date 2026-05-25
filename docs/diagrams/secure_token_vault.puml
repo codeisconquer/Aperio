@@ -45,7 +45,7 @@ end box
 note over CRYPTO, OS
   setup(): crypto::ensure_master_key()
 end note
-CRYPTO -> KEYRING : Entry::get_password()\ncom.aperio.app / master-encryption-key
+CRYPTO -> KEYRING : Entry::get_password()\nde.viebrocksoftware.aperio / master-encryption-key
 alt No master key yet
   KEYRING -> OS : read password
   OS --> KEYRING : NoEntry

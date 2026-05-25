@@ -2,12 +2,11 @@ import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Check, ChevronDown, Code2, Copy, Loader2 } from "lucide-react";
 import { copyToClipboard, exportRequestCommands } from "../../lib/exportRequest";
-import { generateNodeFetch, generatePythonRequests } from "../../lib/codeGen";
 import { formatUiError } from "../../lib/uiError";
 import type { RequestDraft } from "../../types/history";
 import { ExportSnippetsModal } from "./ExportSnippetsModal";
 
-type CopiedKind = "curl" | "wget" | "python" | "node" | null;
+type CopiedKind = "curl" | "wget" | null;
 
 interface ExportRequestMenuProps {
   draft: RequestDraft;
@@ -43,6 +42,12 @@ export function ExportRequestMenu({ draft, disabled }: ExportRequestMenuProps) {
     return () => window.clearTimeout(timer);
   }, [toast]);
 
+  useEffect(() => {
+    if (!error) return;
+    const timer = window.setTimeout(() => setError(null), 5000);
+    return () => window.clearTimeout(timer);
+  }, [error]);
+
   async function handleQuickCopy(kind: CopiedKind) {
     if (!kind) return;
     if (!draft.url.trim()) {
@@ -53,26 +58,13 @@ export function ExportRequestMenu({ draft, disabled }: ExportRequestMenuProps) {
     setLoading(true);
     setError(null);
     try {
-      let text: string;
-      if (kind === "python") {
-        text = generatePythonRequests(draft);
-      } else if (kind === "node") {
-        text = generateNodeFetch(draft);
-      } else {
-        const commands = await exportRequestCommands(draft);
-        text = kind === "curl" ? commands.curl : commands.wget;
-      }
+      const commands = await exportRequestCommands(draft);
+      const text = kind === "curl" ? commands.curl : commands.wget;
 
       await copyToClipboard(text);
       setCopied(kind);
       setToast(
-        kind === "curl"
-          ? t("export.copiedCurl")
-          : kind === "wget"
-            ? t("export.copiedWget")
-            : kind === "python"
-              ? t("export.copiedPython")
-              : t("export.copiedNode"),
+        kind === "curl" ? t("export.copiedCurl") : t("export.copiedWget"),
       );
       setOpen(false);
       window.setTimeout(() => setCopied(null), 1500);
@@ -112,7 +104,7 @@ export function ExportRequestMenu({ draft, disabled }: ExportRequestMenuProps) {
         {open && (
           <div
             role="menu"
-            className="absolute right-0 top-full z-20 mt-1 min-w-64 overflow-hidden rounded-md border border-white/10 bg-surface py-1 shadow-lg"
+            className="absolute right-0 top-full z-20 mt-1 min-w-56 overflow-hidden rounded-md border border-white/10 bg-surface py-1 shadow-lg"
           >
             <button
               type="button"
@@ -132,24 +124,6 @@ export function ExportRequestMenu({ draft, disabled }: ExportRequestMenuProps) {
             >
               {t("export.copyWget")}
             </button>
-            <button
-              type="button"
-              role="menuitem"
-              disabled={loading}
-              onClick={() => void handleQuickCopy("python")}
-              className="flex w-full px-3 py-2 text-left text-xs text-foreground hover:bg-background/60 disabled:opacity-50"
-            >
-              {t("export.copyPython")}
-            </button>
-            <button
-              type="button"
-              role="menuitem"
-              disabled={loading}
-              onClick={() => void handleQuickCopy("node")}
-              className="flex w-full px-3 py-2 text-left text-xs text-foreground hover:bg-background/60 disabled:opacity-50"
-            >
-              {t("export.copyNode")}
-            </button>
             <div className="my-1 border-t border-white/10" />
             <button
               type="button"
@@ -160,20 +134,31 @@ export function ExportRequestMenu({ draft, disabled }: ExportRequestMenuProps) {
               <Code2 className="size-3.5 text-accent" aria-hidden />
               {t("export.openSnippets")}
             </button>
+            {error && (
+              <p
+                role="alert"
+                className="border-t border-red-500/30 bg-red-500/10 px-3 py-2 text-[11px] leading-snug text-red-200"
+              >
+                {error}
+              </p>
+            )}
           </div>
         )}
 
-        {toast && (
+        {toast && !open && (
           <p
             role="status"
-            className="absolute right-0 top-full z-30 mt-1 whitespace-nowrap rounded-md border border-success/30 bg-success/10 px-2 py-1 text-[10px] text-success"
+            className="absolute bottom-full right-0 z-50 mb-1 whitespace-nowrap rounded-md border border-success/30 bg-surface px-2.5 py-1.5 text-[10px] text-success shadow-lg"
           >
             {toast}
           </p>
         )}
 
         {error && !open && !modalOpen && (
-          <p className="absolute right-0 top-full z-30 mt-1 max-w-48 text-[10px] text-red-300">
+          <p
+            role="alert"
+            className="absolute bottom-full right-0 z-50 mb-1 max-w-64 rounded-md border border-red-500/40 bg-surface px-2.5 py-1.5 text-[11px] leading-snug text-red-200 shadow-lg"
+          >
             {error}
           </p>
         )}

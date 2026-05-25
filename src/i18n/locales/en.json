@@ -13,7 +13,8 @@
     "createTitle": "Create environment",
     "editTitle": "Edit environment",
     "close": "Close",
-    "hint": "Variables are substituted as {{name}} in the URL, headers, and body before the request is sent.",
+    "hint": "Variables belong to the active project. {{name}} replaces placeholders in URL, headers, and body. Matching keys (e.g. username) prefill path parameters like {username}.",
+    "selectProjectFirst": "Select an endpoint from a project first, then define variables such as username here.",
     "nameLabel": "Name",
     "namePlaceholder": "e.g. Local, Staging",
     "variablesLabel": "Variables",
@@ -25,7 +26,33 @@
     "projects": "Workspaces",
     "empty": "No requests yet",
     "projectsEmpty": "Import a workspace to load endpoints from OpenAPI, Serverless, or Postman",
-    "importWorkspace": "Import workspace"
+    "importWorkspace": "Import workspace",
+    "deleteHistoryEntry": "Delete entry",
+    "clearHistory": "Clear history",
+    "confirmClearHistory": "Delete the entire request history permanently?",
+    "removeProject": "Remove workspace",
+    "confirmRemoveProject": "Remove workspace \"{{name}}\" and its environments from this session?"
+  },
+  "projectSettings": {
+    "openMenu": "Workspace settings",
+    "manageEnvironments": "Settings…",
+    "authHeading": "Authentication",
+    "defaultEnvironmentName": "Default",
+    "backToEnvironments": "Back to environments",
+    "title": "Workspace settings",
+    "close": "Close",
+    "environmentsHeading": "Environments",
+    "environmentsHint": "Define variables such as base_url or username. They replace {{placeholders}} in URLs, headers, and body — e.g. base_url: http://localhost:8080/api/v1 for local testing.",
+    "activeEnvironment": "Active environment",
+    "noEnvironments": "No environment for this workspace yet.",
+    "createEnvironment": "New environment",
+    "editEnvironment": "Edit",
+    "copyEnvironment": "Copy environment",
+    "deleteEnvironment": "Delete environment",
+    "confirmDeleteEnvironment": "Delete environment \"{{name}}\" permanently?",
+    "copyProject": "Copy workspace",
+    "copySuffix": "(copy)",
+    "projectActions": "More actions"
   },
   "workspaceImport": {
     "title": "Import workspace",
@@ -68,7 +95,9 @@
       "curl": "cURL",
       "wget": "wget",
       "go": "Go (net/http)",
-      "rust": "Rust (reqwest)"
+      "rust": "Rust (reqwest)",
+      "python": "Python (requests)",
+      "node": "Node.js (fetch)"
     }
   },
   "curlImport": {
@@ -86,7 +115,11 @@
     "title": "Request",
     "method": "Method",
     "url": "URL",
-    "urlPlaceholder": "https://api.example.com/endpoint",
+    "urlPlaceholder": "https://api.example.com/endpoint or /v1/path",
+    "urlErrorEmpty": "Enter a URL or API path before sending the request.",
+    "urlErrorInvalid": "Invalid URL or path. Examples: https://api.example.com/v1 or /v1/forecast",
+    "urlShowResolved": "Show resolved URL (values from environment and path variables)",
+    "urlShowTemplate": "Show placeholders ({{variables}} and {path})",
     "queryParams": "Query parameters",
     "pathParams": "Path variables",
     "pathParamValuePlaceholder": "Enter value…",

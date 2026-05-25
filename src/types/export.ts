@@ -5,4 +5,10 @@ export interface ExportCommands {
   rust: string;
 }
 
-export type ExportSnippetTab = "curl" | "wget" | "go" | "rust";
+export type ExportSnippetTab =
+  | "curl"
+  | "wget"
+  | "go"
+  | "rust"
+  | "python"
+  | "node";

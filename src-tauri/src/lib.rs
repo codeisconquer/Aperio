@@ -57,6 +57,8 @@ pub fn run() {
             http::parse_curl_command,
             http::export_request_commands_cmd,
             database::get_history,
+            database::delete_history_entry_cmd,
+            database::clear_history_cmd,
             environments::get_environments,
             environments::save_environment_cmd,
             environments::delete_environment_cmd,

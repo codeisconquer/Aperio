@@ -5,6 +5,66 @@ All notable changes to Aperio are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v0.2.1] - 2026-05-24 — URL field layout
+
+### Fixed
+
+- **Request URL field** — Input spans the full width of the bordered URL container (no nested narrow box).
+
+## [v0.2.0] - 2026-05-24 — URL Preview, Export & Polish
+
+### Added
+
+- **URL preview toggle** — Switch next to the URL field between placeholders (`{{base_url}}/path`) and resolved values from environment and path variables.
+- **Export snippets** — Python (`requests`) and Node.js (`fetch`) moved into the code-snippets modal alongside Go and Rust.
+- **Template URLs for all OpenAPI servers** — Absolute `servers` URLs (e.g. `http://localhost:5510`) are stored as `{{base_url}}/path` so environments can switch hosts (Frontend vs. Backend).
+
+### Changed
+
+- **Bundle identifier** — `de.viebrocksoftware.aperio` (macOS app data and keychain paths).
+- **Export** — cURL/wget quick copy and snippet export use resolved URLs (no remaining `{{placeholders}}`).
+- **OpenAPI import** — Endpoints always use `{{base_url}}` when a server URL is defined; default environment still seeds `base_url`.
+
+### Fixed
+
+- **Request body editor** — JSON body text stays inside the input field (overlay alignment).
+- **Clipboard copy** — Tauri clipboard permissions and clearer error placement in export UI.
+- **Path params** — `{{base_url}}` is no longer mistaken for `{base_url}` path parameters.
+- **Environment editor** — Edit/create environments inline in project settings (no hidden second modal).
+
+## [v0.1.7] - 2026-05-25 — Base URL via Environments & Settings UX
+
+### Added
+
+- **OpenAPI base URL in environments** — On import, a default environment (e.g. „Standard“) is created with `base_url` from the OpenAPI `servers` section.
+- **Smart endpoint URLs** — Relative server prefixes (`/api/v1`) use `{{base_url}}/path`; absolute servers (`https://…`) become complete URLs in the builder. Ad-hoc full URLs in the request field still work.
+- **Inline environment editor** — Edit or create environments inside project settings; no second overlay behind the settings dialog.
+
+### Changed
+
+- Base URL is managed via environment variables instead of a separate field in project settings.
+- Environment hints mention `base_url` and host configuration (e.g. `http://localhost:8080/api/v1`).
+
+### Fixed
+
+- Environment delete from the project settings list now persists to SQLite.
+- URL validation accepts template URLs such as `{{base_url}}/connections`.
+
+## [v0.1.6] - 2026-05-24 — Project Settings, Environments & UX
+
+### Added
+
+- **Project settings (gear menu)** — Per workspace: manage environments, auth token, copy workspace, remove workspace.
+- **Project-scoped environments** — Variables belong to the active project; matching keys prefill path parameters (e.g. `username` → `{username}`).
+- **Path-param highlighting** — Unresolved `{param}` in the URL shown in amber, resolved in green; `{{env}}` placeholders stay accent-colored.
+- **History management** — Delete individual entries or clear the full request history from the sidebar.
+- **URL validation** — Clear error messages and red field styling for empty or invalid URLs before send.
+
+### Changed
+
+- Auth token is configured in project settings instead of a separate lock icon in the workspace list.
+- Environment selector only applies when a project workspace is active.
+
 ## [v0.1.5] - 2026-05-24 — Path Variables, Code Export & macOS Install
 
 ### Added
@@ -64,7 +124,11 @@ First public MVP: a fast, local-first desktop API client with OpenAPI workspaces
 
 - API tokens are never stored in plaintext; encryption uses AES-GCM with a keychain-backed master key.
 
-[Unreleased]: https://github.com/codeisconquer/Aperio/compare/v0.1.5...HEAD
+[Unreleased]: https://github.com/codeisconquer/Aperio/compare/v0.2.1...HEAD
+[v0.2.1]: https://github.com/codeisconquer/Aperio/releases/tag/v0.2.1
+[v0.2.0]: https://github.com/codeisconquer/Aperio/compare/v0.1.7...v0.2.0
+[v0.1.7]: https://github.com/codeisconquer/Aperio/releases/tag/v0.1.7
+[v0.1.6]: https://github.com/codeisconquer/Aperio/releases/tag/v0.1.6
 [v0.1.5]: https://github.com/codeisconquer/Aperio/releases/tag/v0.1.5
 [v0.1.4]: https://github.com/codeisconquer/Aperio/releases/tag/v0.1.4
 [v0.1.0]: https://github.com/codeisconquer/Aperio/releases/tag/v0.1.0

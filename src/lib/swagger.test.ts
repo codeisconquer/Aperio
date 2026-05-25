@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   appendQueryParamNames,
+  buildEndpointRequestUrl,
   buildEndpointUrlWithQuery,
   endpointToRequestDraft,
   headersTextToJson,
@@ -57,7 +58,7 @@ describe("endpointToRequestDraft", () => {
 
     expect(draft.method).toBe("GET");
     expect(draft.url).toBe(
-      "https://api.example.com/users?limit=&offset=",
+      "{{base_url}}/users?limit=&offset=",
     );
     expect(JSON.parse(draft.headers)).toEqual({
       Accept: "application/json",
@@ -69,20 +70,20 @@ describe("endpointToRequestDraft", () => {
     const draft = endpointToRequestDraft(project, postmanPost);
 
     expect(draft.method).toBe("POST");
-    expect(draft.url).toBe("https://api.example.com/users");
+    expect(draft.url).toBe("{{base_url}}/users");
     expect(JSON.parse(draft.headers)).toEqual({
       "Content-Type": "application/json",
     });
     expect(draft.body).toContain("Ada");
   });
 
-  it("preserves existing query string values", () => {
-    expect(
-      appendQueryParamNames("https://api.example.com/users?limit=10", [
-        "limit",
-        "offset",
-      ]),
-    ).toBe("https://api.example.com/users?limit=10&offset=");
+  it("uses {{base_url}} for relative server imports", () => {
+    const relativeProject: SwaggerProject = {
+      ...project,
+      base_url: "/api/v1",
+    };
+    const draft = endpointToRequestDraft(relativeProject, postmanGet);
+    expect(draft.url).toBe("{{base_url}}/users?limit=&offset=");
   });
 });
 
@@ -100,7 +101,44 @@ describe("headersTextToJson", () => {
   });
 });
 
+describe("buildEndpointRequestUrl", () => {
+  it("uses {{base_url}} placeholder for relative OpenAPI server prefix", () => {
+    expect(
+      buildEndpointRequestUrl("/api/v1", "/connections", []),
+    ).toBe("{{base_url}}/connections");
+  });
+
+  it("uses {{base_url}} for absolute OpenAPI servers too", () => {
+    expect(
+      buildEndpointRequestUrl("http://localhost:5510", "/api/submit", []),
+    ).toBe("{{base_url}}/api/submit");
+  });
+
+  it("uses path only when no base URL is defined", () => {
+    expect(buildEndpointRequestUrl(null, "/connections", [])).toBe(
+      "/connections",
+    );
+  });
+});
+
+describe("appendQueryParamNames", () => {
+  it("preserves existing query string values", () => {
+    expect(
+      appendQueryParamNames("https://api.example.com/users?limit=10", [
+        "limit",
+        "offset",
+      ]),
+    ).toBe("https://api.example.com/users?limit=10&offset=");
+  });
+});
+
 describe("buildEndpointUrlWithQuery", () => {
+  it("joins relative OpenAPI server prefix with path", () => {
+    expect(
+      buildEndpointUrlWithQuery("/api/v1", "/connections", []),
+    ).toBe("/api/v1/connections");
+  });
+
   it("uses absolute path from Postman raw URL", () => {
     expect(
       buildEndpointUrlWithQuery(null, "https://api.example.com/ping", ["q"]),

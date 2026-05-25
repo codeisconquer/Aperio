@@ -1,6 +1,6 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Loader2, Send, Terminal } from "lucide-react";
+import { Braces, Link2, Loader2, Send, Terminal } from "lucide-react";
 import { KeyValueTable } from "../common/KeyValueTable";
 import { VariableInput, VariableTextarea } from "../common/VariableHighlight";
 import {
@@ -13,9 +13,16 @@ import {
 } from "../../lib/keyValueRows";
 import {
   applyPathParams,
-  emptyPathParamValues,
   extractPathParamsFromUrl,
+  initialPathParamValues,
+  mergeEnvIntoEmptyPathParams,
 } from "../../lib/pathParams";
+import {
+  resolveExportDraft,
+  resolveRequestUrl,
+  templateRequestUrl,
+} from "../../lib/resolveExportDraft";
+import { getRequestUrlIssue } from "../../lib/requestUrl";
 import type { RequestDraft } from "../../types/history";
 import { CurlImportModal } from "./CurlImportModal";
 import { ExportRequestMenu } from "./ExportRequestMenu";
@@ -56,6 +63,7 @@ function methodOptions(current: string): string[] {
 interface RequestBuilderProps {
   draft: RequestDraft;
   pathParams?: string[];
+  environmentVariables?: Record<string, string>;
   onDraftChange: (draft: RequestDraft) => void;
   onSend: (payload: RequestDraft) => void;
   onCurlImported?: () => void;
@@ -65,6 +73,7 @@ interface RequestBuilderProps {
 export function RequestBuilder({
   draft,
   pathParams = [],
+  environmentVariables = {},
   onDraftChange,
   onSend,
   onCurlImported,
@@ -75,20 +84,61 @@ export function RequestBuilder({
   const [pathParamValues, setPathParamValues] = useState<Record<string, string>>(
     {},
   );
+  const [urlFieldTouched, setUrlFieldTouched] = useState(false);
+  const [urlShowResolved, setUrlShowResolved] = useState(false);
 
-  const { baseUrl, queryRows } = useMemo(
-    () => parseRequestUrl(draft.url),
-    [draft.url],
+  const templateUrl = useMemo(
+    () => templateRequestUrl(draft.url, environmentVariables),
+    [draft.url, environmentVariables],
   );
+
+  const resolvedUrl = useMemo(
+    () => resolveRequestUrl(draft.url, pathParamValues, environmentVariables),
+    [draft.url, pathParamValues, environmentVariables],
+  );
+
+  const { baseUrl: templateBaseUrl, queryRows } = useMemo(
+    () => parseRequestUrl(templateUrl),
+    [templateUrl],
+  );
+
+  const displayBaseUrl = useMemo(() => {
+    if (!urlShowResolved) return templateBaseUrl;
+    return parseRequestUrl(resolvedUrl).baseUrl;
+  }, [urlShowResolved, templateBaseUrl, resolvedUrl]);
+
+  const urlIssue = useMemo(
+    () => getRequestUrlIssue(urlShowResolved ? displayBaseUrl : templateBaseUrl),
+    [urlShowResolved, displayBaseUrl, templateBaseUrl],
+  );
+  const urlErrorMessage =
+    urlIssue === "empty"
+      ? t("builder.urlErrorEmpty")
+      : urlIssue === "invalid"
+        ? t("builder.urlErrorInvalid")
+        : null;
+  const showUrlError = urlFieldTouched && urlErrorMessage !== null;
   const effectivePathParams = useMemo(() => {
     if (pathParams.length > 0) return pathParams;
-    return extractPathParamsFromUrl(baseUrl);
-  }, [pathParams, baseUrl]);
+    return extractPathParamsFromUrl(templateBaseUrl);
+  }, [pathParams, templateBaseUrl]);
   const pathParamsKey = effectivePathParams.join("\0");
+  const envVarsKey = JSON.stringify(environmentVariables);
+  const prevPathParamsKeyRef = useRef(pathParamsKey);
 
   useEffect(() => {
-    setPathParamValues(emptyPathParamValues(effectivePathParams));
-  }, [pathParamsKey]);
+    if (prevPathParamsKeyRef.current !== pathParamsKey) {
+      prevPathParamsKeyRef.current = pathParamsKey;
+      setPathParamValues(
+        initialPathParamValues(effectivePathParams, environmentVariables),
+      );
+      return;
+    }
+
+    setPathParamValues((prev) =>
+      mergeEnvIntoEmptyPathParams(prev, effectivePathParams, environmentVariables),
+    );
+  }, [pathParamsKey, envVarsKey, effectivePathParams, environmentVariables]);
   const headerRows = useMemo(
     () => headersToRows(draft.headers),
     [draft.headers],
@@ -100,6 +150,9 @@ export function RequestBuilder({
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    setUrlFieldTouched(true);
+    if (getRequestUrlIssue(templateBaseUrl) !== null) return;
+
     onSend({
       ...draft,
       url: applyPathParams(draft.url, pathParamValues),
@@ -112,13 +165,17 @@ export function RequestBuilder({
   }
 
   function updateBaseUrl(nextBase: string) {
-    const hash = extractUrlHash(draft.url);
+    const hash = extractUrlHash(templateUrl);
     update("url", buildRequestUrl(nextBase, queryRows, hash));
   }
 
+  function markUrlTouched() {
+    setUrlFieldTouched(true);
+  }
+
   function updateQueryRows(rows: KeyValueRow[]) {
-    const hash = extractUrlHash(draft.url);
-    update("url", buildRequestUrl(baseUrl, rows, hash));
+    const hash = extractUrlHash(templateUrl);
+    update("url", buildRequestUrl(templateBaseUrl, rows, hash));
   }
 
   function updateHeaderRows(rows: KeyValueRow[]) {
@@ -126,11 +183,8 @@ export function RequestBuilder({
   }
 
   const exportDraft = useMemo(
-    () => ({
-      ...draft,
-      url: applyPathParams(draft.url, pathParamValues),
-    }),
-    [draft, pathParamValues],
+    () => resolveExportDraft(draft, pathParamValues, environmentVariables),
+    [draft, pathParamValues, environmentVariables],
   );
 
   return (
@@ -171,39 +225,102 @@ export function RequestBuilder({
 
       <form
         id="request-form"
+        noValidate
         onSubmit={handleSubmit}
         className="flex flex-1 flex-col gap-4 overflow-y-auto p-4"
       >
-        <div className="flex gap-2">
-          <label className="sr-only" htmlFor="http-method">
-            {t("builder.method")}
-          </label>
-          <select
-            id="http-method"
-            value={draft.method}
-            onChange={(e) => update("method", e.target.value)}
-            className={`w-28 shrink-0 rounded-md border border-white/10 bg-surface px-3 py-2 text-sm font-semibold outline-none focus:border-accent ${methodColor(draft.method)}`}
-          >
-            {methodOptions(draft.method).map((m) => (
-              <option key={m} value={m} className="text-foreground">
-                {m}
-              </option>
-            ))}
-          </select>
-          <label className="sr-only" htmlFor="request-url">
-            {t("builder.url")}
-          </label>
-          <div className="min-w-0 flex-1 rounded-md border border-white/10 bg-surface focus-within:border-accent">
-            <VariableInput
-              id="request-url"
-              type="url"
-              value={baseUrl}
-              onChange={updateBaseUrl}
-              placeholder={t("builder.urlPlaceholder")}
-              inputClassName="text-sm"
-              className="px-1 py-1"
-            />
+        <div className="flex flex-col gap-1">
+          <div className="flex gap-2">
+            <label className="sr-only" htmlFor="http-method">
+              {t("builder.method")}
+            </label>
+            <select
+              id="http-method"
+              value={draft.method}
+              onChange={(e) => update("method", e.target.value)}
+              className={`w-28 shrink-0 rounded-md border border-white/10 bg-surface px-3 py-2 text-sm font-semibold outline-none focus:border-accent ${methodColor(draft.method)}`}
+            >
+              {methodOptions(draft.method).map((m) => (
+                <option key={m} value={m} className="text-foreground">
+                  {m}
+                </option>
+              ))}
+            </select>
+            <label className="sr-only" htmlFor="request-url">
+              {t("builder.url")}
+            </label>
+            <div
+              className={`min-w-0 flex-1 rounded-md border bg-surface transition-colors ${
+                showUrlError
+                  ? "border-red-500/60 focus-within:border-red-400"
+                  : "border-white/10 focus-within:border-accent"
+              } ${urlShowResolved ? "opacity-95" : ""}`}
+            >
+              {urlShowResolved ? (
+                <input
+                  id="request-url"
+                  type="text"
+                  readOnly
+                  value={displayBaseUrl}
+                  onFocus={() => setUrlShowResolved(false)}
+                  className="block w-full min-w-0 bg-transparent px-3 py-2 font-mono text-sm text-foreground outline-none"
+                  aria-describedby={showUrlError ? "request-url-error" : undefined}
+                />
+              ) : (
+                <VariableInput
+                  id="request-url"
+                  type="text"
+                  inputMode="url"
+                  autoComplete="off"
+                  spellCheck={false}
+                  invalid={showUrlError}
+                  pathParamValues={pathParamValues}
+                  value={templateBaseUrl}
+                  onChange={updateBaseUrl}
+                  onBlur={markUrlTouched}
+                  placeholder={t("builder.urlPlaceholder")}
+                  inputClassName="text-sm"
+                  className="block w-full min-w-0"
+                  aria-describedby={showUrlError ? "request-url-error" : undefined}
+                />
+              )}
+            </div>
+            <button
+              type="button"
+              aria-pressed={urlShowResolved}
+              title={
+                urlShowResolved
+                  ? t("builder.urlShowTemplate")
+                  : t("builder.urlShowResolved")
+              }
+              onClick={() => setUrlShowResolved((value) => !value)}
+              className={`shrink-0 rounded-md border px-2.5 py-2 transition-colors ${
+                urlShowResolved
+                  ? "border-accent/50 bg-accent/15 text-accent"
+                  : "border-white/10 bg-surface text-foreground/55 hover:border-accent/40 hover:text-accent"
+              }`}
+            >
+              {urlShowResolved ? (
+                <Braces className="size-4" aria-hidden />
+              ) : (
+                <Link2 className="size-4" aria-hidden />
+              )}
+              <span className="sr-only">
+                {urlShowResolved
+                  ? t("builder.urlShowTemplate")
+                  : t("builder.urlShowResolved")}
+              </span>
+            </button>
           </div>
+          {showUrlError && (
+            <p
+              id="request-url-error"
+              role="alert"
+              className="text-xs leading-relaxed text-red-300"
+            >
+              {urlErrorMessage}
+            </p>
+          )}
         </div>
 
         <fieldset className="flex flex-col gap-2">

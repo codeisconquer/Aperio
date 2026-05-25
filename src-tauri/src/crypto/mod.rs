@@ -7,7 +7,7 @@ use aes_gcm::{
 use base64::{engine::general_purpose::STANDARD, Engine};
 use keyring::Entry;
 
-const KEYRING_SERVICE: &str = "com.aperio.app";
+const KEYRING_SERVICE: &str = "de.viebrocksoftware.aperio";
 const KEYRING_USER: &str = "master-encryption-key";
 
 static MASTER_KEY: OnceLock<[u8; 32]> = OnceLock::new();

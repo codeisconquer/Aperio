@@ -50,13 +50,34 @@ CREATE TABLE IF NOT EXISTS secure_tokens (
 CREATE TABLE IF NOT EXISTS environments (
     id TEXT PRIMARY KEY,
     name TEXT NOT NULL,
-    variables TEXT NOT NULL DEFAULT '{}'
+    variables TEXT NOT NULL DEFAULT '{}',
+    project_id TEXT
 );
 "#;
 
+fn migrate_schema(conn: &Connection) -> Result<(), String> {
+    let mut stmt = conn
+        .prepare("PRAGMA table_info(environments)")
+        .map_err(|e| format!("Failed to inspect environments schema: {e}"))?;
+
+    let columns = stmt
+        .query_map([], |row| row.get::<_, String>(1))
+        .map_err(|e| format!("Failed to read environments schema: {e}"))?
+        .collect::<Result<Vec<_>, _>>()
+        .map_err(|e| format!("Failed to read environments schema: {e}"))?;
+
+    if !columns.iter().any(|name| name == "project_id") {
+        conn.execute("ALTER TABLE environments ADD COLUMN project_id TEXT", [])
+            .map_err(|e| format!("Failed to migrate environments schema: {e}"))?;
+    }
+
+    Ok(())
+}
+
 pub fn init_schema(conn: &Connection) -> Result<(), String> {
     conn.execute_batch(SCHEMA)
-        .map_err(|e| format!("Failed to initialize database schema: {e}"))
+        .map_err(|e| format!("Failed to initialize database schema: {e}"))?;
+    migrate_schema(conn)
 }
 
 pub fn db_path(app: &AppHandle) -> Result<PathBuf, String> {
@@ -138,9 +159,46 @@ pub fn fetch_history(pool: &DbPool, limit: usize) -> Result<Vec<HistoryEntry>, S
         .map_err(|e| format!("Failed to read history rows: {e}"))
 }
 
+pub fn delete_history_entry(pool: &DbPool, id: &str) -> Result<(), String> {
+    let id = id.trim();
+    if id.is_empty() {
+        return Err("History entry id is required".into());
+    }
+
+    let conn = pool
+        .get()
+        .map_err(|e| format!("Failed to acquire database connection: {e}"))?;
+
+    conn.execute("DELETE FROM history WHERE id = ?1", params![id])
+        .map_err(|e| format!("Failed to delete history entry: {e}"))?;
+
+    Ok(())
+}
+
+pub fn clear_history(pool: &DbPool) -> Result<(), String> {
+    let conn = pool
+        .get()
+        .map_err(|e| format!("Failed to acquire database connection: {e}"))?;
+
+    conn.execute("DELETE FROM history", [])
+        .map_err(|e| format!("Failed to clear history: {e}"))?;
+
+    Ok(())
+}
+
 #[tauri::command]
 pub fn get_history(pool: tauri::State<'_, DbPool>) -> Result<Vec<HistoryEntry>, String> {
     fetch_history(&pool, 50)
+}
+
+#[tauri::command]
+pub fn delete_history_entry_cmd(pool: tauri::State<'_, DbPool>, id: String) -> Result<(), String> {
+    delete_history_entry(&pool, &id)
+}
+
+#[tauri::command]
+pub fn clear_history_cmd(pool: tauri::State<'_, DbPool>) -> Result<(), String> {
+    clear_history(&pool)
 }
 
 pub fn log_history_async(pool: DbPool, entry: HistoryInsert) {
@@ -194,5 +252,65 @@ mod tests {
         assert_eq!(entries[0].method, "GET");
         assert_eq!(entries[0].status_code, 200);
         assert_eq!(entries[0].duration_ms, 42);
+    }
+
+    #[test]
+    fn deletes_single_history_entry() {
+        let test_db = test_pool();
+        let pool = &test_db.pool;
+        insert_history(
+            pool,
+            HistoryInsert {
+                method: "GET".into(),
+                url: "https://example.com/a".into(),
+                headers: "{}".into(),
+                body: "".into(),
+                status_code: 200,
+                duration_ms: 10,
+            },
+        )
+        .expect("insert");
+        insert_history(
+            pool,
+            HistoryInsert {
+                method: "POST".into(),
+                url: "https://example.com/b".into(),
+                headers: "{}".into(),
+                body: "".into(),
+                status_code: 201,
+                duration_ms: 20,
+            },
+        )
+        .expect("insert");
+
+        let entries = fetch_history(pool, 10).expect("fetch");
+        assert_eq!(entries.len(), 2);
+
+        delete_history_entry(pool, &entries[0].id).expect("delete");
+        let remaining = fetch_history(pool, 10).expect("fetch");
+        assert_eq!(remaining.len(), 1);
+        assert_eq!(remaining[0].method, "POST");
+    }
+
+    #[test]
+    fn clears_all_history() {
+        let test_db = test_pool();
+        let pool = &test_db.pool;
+        insert_history(
+            pool,
+            HistoryInsert {
+                method: "GET".into(),
+                url: "https://example.com".into(),
+                headers: "{}".into(),
+                body: "".into(),
+                status_code: 200,
+                duration_ms: 42,
+            },
+        )
+        .expect("insert");
+
+        clear_history(pool).expect("clear");
+        let entries = fetch_history(pool, 10).expect("fetch");
+        assert!(entries.is_empty());
     }
 }

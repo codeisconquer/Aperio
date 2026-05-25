@@ -39,6 +39,31 @@ export function substituteVariables(
   });
 }
 
+/** Rewrites a resolved URL back to {{base_url}} when it matches the env base_url value. */
+export function urlToTemplateForm(
+  url: string,
+  environmentVariables: Record<string, string>,
+): string {
+  const base = environmentVariables.base_url?.trim();
+  if (!base || url.includes("{{")) return url;
+
+  const normalizedBase = base.replace(/\/+$/, "");
+  const hashIndex = url.indexOf("#");
+  const hash = hashIndex >= 0 ? url.slice(hashIndex) : "";
+  const withoutHash = hashIndex >= 0 ? url.slice(0, hashIndex) : url;
+  const queryIndex = withoutHash.indexOf("?");
+  const pathPart =
+    queryIndex >= 0 ? withoutHash.slice(0, queryIndex) : withoutHash;
+  const query = queryIndex >= 0 ? withoutHash.slice(queryIndex) : "";
+
+  if (pathPart === normalizedBase || pathPart.startsWith(`${normalizedBase}/`)) {
+    const suffix = pathPart.slice(normalizedBase.length) || "";
+    return `{{base_url}}${suffix}${query}${hash}`;
+  }
+
+  return url;
+}
+
 export function applyEnvironmentToDraft(
   draft: RequestDraft,
   variables: Record<string, string>,

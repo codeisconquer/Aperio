@@ -3,6 +3,8 @@ import {
   applyPathParams,
   emptyPathParamValues,
   extractPathParamsFromUrl,
+  initialPathParamValues,
+  mergeEnvIntoEmptyPathParams,
 } from "./pathParams";
 
 describe("extractPathParamsFromUrl", () => {
@@ -46,5 +48,25 @@ describe("emptyPathParamValues", () => {
       username: "",
       delivery_id: "",
     });
+  });
+});
+
+describe("initialPathParamValues", () => {
+  it("prefills from environment variables with matching keys", () => {
+    expect(
+      initialPathParamValues(["username"], { username: "jviebrock" }),
+    ).toEqual({ username: "jviebrock" });
+  });
+});
+
+describe("mergeEnvIntoEmptyPathParams", () => {
+  it("fills only empty path-param fields", () => {
+    expect(
+      mergeEnvIntoEmptyPathParams(
+        { username: "manual", id: "" },
+        ["username", "id"],
+        { username: "from-env", id: "42" },
+      ),
+    ).toEqual({ username: "manual", id: "42" });
   });
 });

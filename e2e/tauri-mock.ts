@@ -19,6 +19,8 @@ export async function installTauriMock(page: Page): Promise<void> {
       (args: Record<string, unknown>) => unknown
     > = {
       get_history: () => [],
+      delete_history_entry_cmd: () => null,
+      clear_history_cmd: () => null,
       get_environments: () => [],
       list_secure_token_projects_cmd: () => [],
       "plugin:event|listen": () => 1,

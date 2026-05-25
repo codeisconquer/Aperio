@@ -13,7 +13,8 @@
     "createTitle": "Umgebung anlegen",
     "editTitle": "Umgebung bearbeiten",
     "close": "Schließen",
-    "hint": "Variablen werden als {{name}} in URL, Headern und Body ersetzt, bevor der Request gesendet wird.",
+    "hint": "Variablen gelten nur für den aktuellen Projektraum. {{name}} ersetzt Platzhalter in URL, Headern und Body. Gleichnamige Schlüssel (z. B. username) füllen Pfad-Parameter wie {username} vor.",
+    "selectProjectFirst": "Zuerst einen Endpunkt aus einem Projektraum wählen, dann hier Variablen wie username hinterlegen.",
     "nameLabel": "Name",
     "namePlaceholder": "z. B. Local, Staging",
     "variablesLabel": "Variablen",
@@ -25,7 +26,33 @@
     "projects": "Projekträume",
     "empty": "Noch keine Requests",
     "projectsEmpty": "Projektraum importieren, um Endpunkte aus OpenAPI, Serverless oder Postman zu laden",
-    "importWorkspace": "Projektraum importieren"
+    "importWorkspace": "Projektraum importieren",
+    "deleteHistoryEntry": "Eintrag löschen",
+    "clearHistory": "Verlauf leeren",
+    "confirmClearHistory": "Gesamten Request-Verlauf unwiderruflich löschen?",
+    "removeProject": "Projektraum entfernen",
+    "confirmRemoveProject": "Projektraum „{{name}}“ und zugehörige Umgebungen aus dieser Sitzung entfernen?"
+  },
+  "projectSettings": {
+    "openMenu": "Projektraum-Einstellungen",
+    "manageEnvironments": "Einstellungen…",
+    "authHeading": "Authentifizierung",
+    "defaultEnvironmentName": "Standard",
+    "backToEnvironments": "Zurück zu Umgebungen",
+    "title": "Projektraum-Einstellungen",
+    "close": "Schließen",
+    "environmentsHeading": "Umgebungen",
+    "environmentsHint": "Lege Variablen wie base_url oder username an. Sie ersetzen {{platzhalter}} in URLs, Headern und Body — z. B. base_url: http://localhost:8080/api/v1 für lokale Tests.",
+    "activeEnvironment": "Aktive Umgebung",
+    "noEnvironments": "Noch keine Umgebung für diesen Projektraum.",
+    "createEnvironment": "Neue Umgebung",
+    "editEnvironment": "Bearbeiten",
+    "copyEnvironment": "Umgebung kopieren",
+    "deleteEnvironment": "Umgebung löschen",
+    "confirmDeleteEnvironment": "Umgebung „{{name}}“ unwiderruflich löschen?",
+    "copyProject": "Projektraum kopieren",
+    "copySuffix": "(Kopie)",
+    "projectActions": "Weitere Aktionen"
   },
   "workspaceImport": {
     "title": "Projektraum importieren",
@@ -68,7 +95,9 @@
       "curl": "cURL",
       "wget": "wget",
       "go": "Go (net/http)",
-      "rust": "Rust (reqwest)"
+      "rust": "Rust (reqwest)",
+      "python": "Python (requests)",
+      "node": "Node.js (fetch)"
     }
   },
   "curlImport": {
@@ -86,7 +115,11 @@
     "title": "Request",
     "method": "Methode",
     "url": "URL",
-    "urlPlaceholder": "https://api.example.com/endpoint",
+    "urlPlaceholder": "https://api.example.com/endpoint oder /v1/pfad",
+    "urlErrorEmpty": "Bitte URL oder API-Pfad eingeben, bevor du den Request sendest.",
+    "urlErrorInvalid": "Ungültige URL oder kein gültiger Pfad. Beispiele: https://api.example.com/v1 oder /v1/forecast",
+    "urlShowResolved": "Aufgelöste URL anzeigen (Werte aus Umgebung und Pfad-Variablen)",
+    "urlShowTemplate": "Platzhalter anzeigen ({{variablen}} und {pfad})",
     "queryParams": "Query-Parameter",
     "pathParams": "Pfad-Variablen",
     "pathParamValuePlaceholder": "Wert eingeben…",

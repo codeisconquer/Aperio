@@ -10,10 +10,12 @@ import { RequestBuilder } from "./RequestBuilder";
 function RequestBuilderHarness({
   onSend,
   pathParams = [],
+  environmentVariables = {},
   initialDraft,
 }: {
   onSend: (payload: ReturnType<typeof emptyRequestDraft>) => void;
   pathParams?: string[];
+  environmentVariables?: Record<string, string>;
   initialDraft?: ReturnType<typeof emptyRequestDraft>;
 }) {
   const [draft, setDraft] = useState(initialDraft ?? emptyRequestDraft());
@@ -23,6 +25,7 @@ function RequestBuilderHarness({
       <RequestBuilder
         draft={draft}
         pathParams={pathParams}
+        environmentVariables={environmentVariables}
         onDraftChange={setDraft}
         onSend={onSend}
         loading={false}
@@ -83,6 +86,33 @@ describe("RequestBuilder", () => {
       expect.objectContaining({
         url: "http://example.com/api/v1/users/jviebrock",
       }),
+    );
+  });
+
+  it("toggles between template and resolved URL preview", async () => {
+    const user = userEvent.setup();
+    render(
+      <RequestBuilderHarness
+        onSend={vi.fn()}
+        environmentVariables={{ base_url: "https://www.test.de" }}
+        initialDraft={{
+          method: "POST",
+          url: "https://www.test.de/connections/test",
+          headers: "",
+          body: "",
+        }}
+      />,
+    );
+
+    const urlInput = screen.getByLabelText(/url/i) as HTMLInputElement;
+    expect(urlInput.value).toBe("{{base_url}}/connections/test");
+
+    await user.click(
+      screen.getByRole("button", { name: /resolved url/i }),
+    );
+
+    expect((screen.getByLabelText(/url/i) as HTMLInputElement).value).toBe(
+      "https://www.test.de/connections/test",
     );
   });
 });

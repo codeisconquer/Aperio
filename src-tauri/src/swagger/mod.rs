@@ -469,10 +469,18 @@ fn generate_default_body(spec: &OpenAPI, operation: &Operation) -> Option<String
     serde_json::to_string_pretty(&value).ok()
 }
 
+fn normalize_openapi_server_url(url: &str) -> String {
+    url.trim().trim_end_matches('/').to_string()
+}
+
 fn build_project(spec: OpenAPI) -> Result<SwaggerProject, String> {
     let title = spec.info.title.clone();
     let version = spec.info.version.clone();
-    let base_url = spec.servers.first().map(|server| server.url.clone());
+    let base_url = spec
+        .servers
+        .first()
+        .map(|server| normalize_openapi_server_url(&server.url))
+        .filter(|url| !url.is_empty());
     let endpoints: Vec<SwaggerEndpoint> = spec
         .operations()
         .map(|(path, method, operation)| {
@@ -1018,6 +1026,34 @@ paths:
             extract_path_params("/items/{id}/related/{id}"),
             vec!["id"]
         );
+    }
+
+    #[test]
+    fn parses_relative_openapi_server_as_base_url() {
+        const YAML: &str = r#"
+openapi: 3.0.3
+info:
+  title: Airflow API (Stable)
+  version: 2.7.2
+servers:
+  - url: /api/v1
+paths:
+  /connections:
+    post:
+      summary: Create a connection
+      responses:
+        "200":
+          description: OK
+"#;
+
+        let project = parse_openapi_project(YAML, "yaml").expect("parse yaml");
+        assert_eq!(project.base_url.as_deref(), Some("/api/v1"));
+        let post = project
+            .endpoints
+            .iter()
+            .find(|endpoint| endpoint.method == "POST")
+            .expect("post endpoint");
+        assert_eq!(post.path, "/connections");
     }
 
     #[test]
