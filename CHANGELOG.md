@@ -5,6 +5,16 @@ All notable changes to Aperio are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v0.2.4] - 2026-06-13 — Settings overlay
+
+### Added
+
+- **App settings overlay** — Gear button next to the Aperio title opens a modal with workspace export/import, language, and theme.
+
+### Changed
+
+- **Sidebar layout** — Workspace backup, language switcher, and dark/light toggle moved out of the sidebar footer; more room for history and project list.
+
 ## [v0.2.3] - 2026-06-13 — Per-environment auth & persistence
 
 ### Added

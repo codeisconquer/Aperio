@@ -194,6 +194,10 @@
   },
   "settings": {
     "title": "Workspace",
+    "modalTitle": "Settings",
+    "open": "Open settings",
+    "close": "Close",
+    "appearanceHeading": "Appearance",
     "export": "Export workspace",
     "import": "Restore workspace backup",
     "exportSuccess": "Workspace exported successfully.",
@@ -218,5 +222,10 @@
     "label": "Language",
     "de": "Deutsch",
     "en": "English"
+  },
+  "theme": {
+    "label": "Theme",
+    "dark": "Dark",
+    "light": "Light"
   }
 }

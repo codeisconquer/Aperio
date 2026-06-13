@@ -194,6 +194,10 @@
   },
   "settings": {
     "title": "Workspace",
+    "modalTitle": "Einstellungen",
+    "open": "Einstellungen öffnen",
+    "close": "Schließen",
+    "appearanceHeading": "Darstellung",
     "export": "Workspace exportieren",
     "import": "Workspace-Backup importieren",
     "exportSuccess": "Workspace erfolgreich exportiert.",
@@ -218,5 +222,10 @@
     "label": "Sprache",
     "de": "Deutsch",
     "en": "English"
+  },
+  "theme": {
+    "label": "Design",
+    "dark": "Dunkel",
+    "light": "Hell"
   }
 }

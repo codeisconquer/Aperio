@@ -55,8 +55,7 @@ test.describe("Aperio desktop UI", () => {
     await page.goto("/");
 
     await page
-      .getByTestId("layout-sidebar")
-      .getByRole("button", { name: "Import workspace" })
+      .getByRole("button", { name: "Import workspace", exact: true })
       .click();
     await expect(page.getByRole("dialog")).toBeVisible();
 

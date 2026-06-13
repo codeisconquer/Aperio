@@ -6,9 +6,13 @@ import { isTauriDialogCancel } from "../../lib/tauriDialog";
 
 interface WorkspaceSettingsProps {
   onImported: () => void;
+  embedded?: boolean;
 }
 
-export function WorkspaceSettings({ onImported }: WorkspaceSettingsProps) {
+export function WorkspaceSettings({
+  onImported,
+  embedded = false,
+}: WorkspaceSettingsProps) {
   const { t } = useTranslation();
   const [exporting, setExporting] = useState(false);
   const [importing, setImporting] = useState(false);
@@ -47,7 +51,13 @@ export function WorkspaceSettings({ onImported }: WorkspaceSettingsProps) {
   }
 
   return (
-    <div className="flex flex-col gap-2 border-t border-border pt-3">
+    <div
+      className={
+        embedded
+          ? "flex flex-col gap-2"
+          : "flex flex-col gap-2 border-t border-border pt-3"
+      }
+    >
       <p className="px-1 text-xs font-semibold uppercase tracking-wider text-muted">
         {t("settings.title")}
       </p>
