@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Braces, Link2, Loader2, Send, Terminal } from "lucide-react";
+import { Braces, Globe, Link2, Loader2, Send, Terminal } from "lucide-react";
 import { KeyValueTable } from "../common/KeyValueTable";
 import { VariableInput, VariableTextarea } from "../common/VariableHighlight";
 import {
@@ -24,6 +24,7 @@ import {
 } from "../../lib/resolveExportDraft";
 import { getRequestUrlIssue } from "../../lib/requestUrl";
 import type { RequestDraft } from "../../types/history";
+import type { Environment } from "../../types/environment";
 import { CurlImportModal } from "./CurlImportModal";
 import { ExportRequestMenu } from "./ExportRequestMenu";
 import { PathParamsTable } from "./PathParamsTable";
@@ -64,6 +65,9 @@ interface RequestBuilderProps {
   draft: RequestDraft;
   pathParams?: string[];
   environmentVariables?: Record<string, string>;
+  environments?: Environment[];
+  activeEnvironmentId?: string | null;
+  onActiveEnvironmentChange?: (id: string | null) => void;
   onDraftChange: (draft: RequestDraft) => void;
   onSend: (payload: RequestDraft) => void;
   onCurlImported?: () => void;
@@ -74,6 +78,9 @@ export function RequestBuilder({
   draft,
   pathParams = [],
   environmentVariables = {},
+  environments = [],
+  activeEnvironmentId = null,
+  onActiveEnvironmentChange,
   onDraftChange,
   onSend,
   onCurlImported,
@@ -229,6 +236,30 @@ export function RequestBuilder({
         onSubmit={handleSubmit}
         className="flex flex-1 flex-col gap-4 overflow-y-auto p-4"
       >
+        {environments.length > 1 && onActiveEnvironmentChange && (
+          <label htmlFor="request-environment-select" className="flex flex-col gap-1">
+            <span className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider text-muted">
+              <Globe className="size-3" aria-hidden />
+              {t("builder.activeEnvironment")}
+            </span>
+            <select
+              id="request-environment-select"
+              value={activeEnvironmentId ?? ""}
+              onChange={(e) =>
+                onActiveEnvironmentChange(e.target.value ? e.target.value : null)
+              }
+              className="rounded-md border border-border bg-surface px-3 py-2 text-sm text-foreground outline-none focus:border-accent"
+            >
+              <option value="">{t("environments.none")}</option>
+              {environments.map((env) => (
+                <option key={env.id} value={env.id}>
+                  {env.name}
+                </option>
+              ))}
+            </select>
+          </label>
+        )}
+
         <div className="flex flex-col gap-1">
           <div className="flex gap-2">
             <label className="sr-only" htmlFor="http-method">

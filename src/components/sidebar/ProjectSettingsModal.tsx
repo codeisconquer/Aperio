@@ -11,7 +11,6 @@ import {
 import { EnvironmentEditorForm } from "../environments/EnvironmentEditorForm";
 import type { Environment } from "../../types/environment";
 import type { SwaggerProject } from "../../types/swagger";
-import { TokenVaultSection } from "../vault/TokenVaultSection";
 
 interface ProjectSettingsModalProps {
   project: SwaggerProject;
@@ -206,10 +205,6 @@ export function ProjectSettingsModal({
                   <Plus className="size-3.5" aria-hidden />
                   {t("projectSettings.createEnvironment")}
                 </button>
-              </section>
-
-              <section className="flex flex-col gap-2 border-t border-border pt-4">
-                <TokenVaultSection projectId={project.id} />
               </section>
 
               <section className="flex flex-col gap-2 border-t border-border pt-4">

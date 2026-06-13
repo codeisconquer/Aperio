@@ -5,12 +5,20 @@ use uuid::Uuid;
 use super::{extract_path_params, push_unique, SwaggerEndpoint, SwaggerProject};
 
 #[derive(Debug, Deserialize)]
+struct PostmanAuth {
+    #[serde(rename = "type")]
+    auth_type: String,
+}
+
+#[derive(Debug, Deserialize)]
 struct PostmanCollection {
     info: PostmanInfo,
     #[serde(default)]
     item: Vec<PostmanItem>,
     #[serde(default)]
     variable: Vec<PostmanVariable>,
+    #[serde(default)]
+    auth: Option<PostmanAuth>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -127,6 +135,8 @@ pub fn parse_postman_content(content: &str) -> Result<SwaggerProject, String> {
         return Err("No HTTP requests found in Postman collection".into());
     }
 
+    let uses_bearer_auth = postman_uses_bearer_auth(&collection);
+
     Ok(SwaggerProject {
         id: Uuid::new_v4().to_string(),
         title: collection.info.name,
@@ -135,7 +145,17 @@ pub fn parse_postman_content(content: &str) -> Result<SwaggerProject, String> {
             .version
             .unwrap_or_else(|| "2.1.0".to_string()),
         base_url,
+        uses_bearer_auth,
         endpoints,
+    })
+}
+
+fn postman_uses_bearer_auth(collection: &PostmanCollection) -> bool {
+    collection.auth.as_ref().is_some_and(|auth| {
+        matches!(
+            auth.auth_type.to_ascii_lowercase().as_str(),
+            "bearer" | "oauth2" | "jwt"
+        )
     })
 }
 

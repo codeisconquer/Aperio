@@ -103,8 +103,9 @@
       "noServer": "No server defined",
       "baseUrlPlaceholderHint": "Endpoint URLs use {{base_url}} as a placeholder. You can adjust the value in the next step.",
       "environmentTitle": "Set up default environment",
-      "environmentHint": "Each workspace has its own environments. Variables replace {{placeholders}} in URLs, headers, and body.",
-      "environmentOptional": "Without variables, no environment is created — you can add one later in project settings."
+      "environmentHint": "Variables and API tokens apply to this environment only — e.g. different tokens for Default and PROD.",
+      "authDetectedHint": "The API spec defines Bearer authentication. The token is stored for this environment and sent with requests.",
+      "environmentOptional": "Without variables or a token, no environment is created — you can add one later in project settings."
     }
   },
   "export": {
@@ -145,6 +146,7 @@
   },
   "builder": {
     "title": "Request",
+    "activeEnvironment": "Active environment",
     "method": "Method",
     "url": "URL",
     "urlPlaceholder": "https://api.example.com/endpoint or /v1/path",
@@ -202,10 +204,13 @@
     "open": "Manage API token",
     "close": "Close",
     "project": "Workspace",
-    "hint": "The token is encrypted locally and injected as a Bearer token when you send requests from this workspace.",
+    "hint": "The token is encrypted locally and sent as a Bearer token with requests using the active environment.",
+    "hintForEnvironment": "The token is encrypted locally and sent as a Bearer token with requests using the “{{name}}” environment.",
+    "selectEnvironmentFirst": "Select an active environment above to store an API token.",
     "tokenLabel": "API token",
     "tokenPlaceholder": "Paste your token here",
-    "stored": "A token is stored for this workspace.",
+    "stored": "A token is stored for this environment.",
+    "storedForEnvironment": "A token is stored for the “{{name}}” environment.",
     "save": "Save token",
     "remove": "Remove"
   },

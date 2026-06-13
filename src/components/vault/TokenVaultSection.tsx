@@ -8,12 +8,14 @@ import {
 } from "../../lib/vault";
 
 interface TokenVaultSectionProps {
-  projectId: string;
+  environmentId: string | null;
+  environmentName?: string | null;
   onChanged?: () => void;
 }
 
 export function TokenVaultSection({
-  projectId,
+  environmentId,
+  environmentName,
   onChanged,
 }: TokenVaultSectionProps) {
   const { t } = useTranslation();
@@ -25,12 +27,24 @@ export function TokenVaultSection({
 
   useEffect(() => {
     let cancelled = false;
+
+    if (!environmentId) {
+      setLoading(false);
+      setStored(false);
+      setToken("");
+      setError(null);
+      return;
+    }
+
     void (async () => {
       setLoading(true);
       setError(null);
       try {
-        const exists = await hasSecureToken(projectId);
-        if (!cancelled) setStored(exists);
+        const exists = await hasSecureToken(environmentId);
+        if (!cancelled) {
+          setStored(exists);
+          setToken("");
+        }
       } catch (err) {
         if (!cancelled) {
           setError(err instanceof Error ? err.message : String(err));
@@ -39,17 +53,20 @@ export function TokenVaultSection({
         if (!cancelled) setLoading(false);
       }
     })();
+
     return () => {
       cancelled = true;
     };
-  }, [projectId]);
+  }, [environmentId]);
 
   async function handleSave(e: React.FormEvent) {
     e.preventDefault();
+    if (!environmentId) return;
+
     setSaving(true);
     setError(null);
     try {
-      await saveSecureToken(projectId, token);
+      await saveSecureToken(environmentId, token);
       setStored(true);
       setToken("");
       onChanged?.();
@@ -61,10 +78,12 @@ export function TokenVaultSection({
   }
 
   async function handleDelete() {
+    if (!environmentId) return;
+
     setSaving(true);
     setError(null);
     try {
-      await deleteSecureToken(projectId);
+      await deleteSecureToken(environmentId);
       setStored(false);
       setToken("");
       onChanged?.();
@@ -75,66 +94,86 @@ export function TokenVaultSection({
     }
   }
 
-  if (loading) {
-    return (
-      <div className="flex justify-center py-4">
-        <Loader2 className="size-5 animate-spin text-accent" aria-hidden />
-      </div>
-    );
-  }
-
   return (
-    <form onSubmit={handleSave} className="flex flex-col gap-2">
+    <div className="flex flex-col gap-2">
       <div className="flex items-center gap-1.5 text-xs font-medium text-muted">
         <KeyRound className="size-3.5 text-warning" aria-hidden />
         {t("projectSettings.authHeading")}
       </div>
-      <p className="text-xs leading-relaxed text-muted">{t("vault.hint")}</p>
 
-      <label className="flex flex-col gap-1">
-        <span className="text-[10px] font-semibold uppercase tracking-wider text-muted">
-          {t("vault.tokenLabel")}
-        </span>
-        <input
-          type="password"
-          value={token}
-          onChange={(e) => setToken(e.target.value)}
-          placeholder={t("vault.tokenPlaceholder")}
-          autoComplete="off"
-          className="rounded-md border border-border bg-background px-3 py-2 font-mono text-sm text-foreground outline-none focus:border-accent"
-        />
-      </label>
-
-      {stored && (
-        <p className="text-xs text-success">{t("vault.stored")}</p>
-      )}
-
-      {error && (
-        <p className="text-xs text-red-300" role="alert">
-          {error}
+      {!environmentId ? (
+        <p className="text-xs leading-relaxed text-muted">
+          {t("vault.selectEnvironmentFirst")}
         </p>
-      )}
+      ) : (
+        <form onSubmit={handleSave} className="flex flex-col gap-2">
+          <p className="text-xs leading-relaxed text-muted">
+            {environmentName
+              ? t("vault.hintForEnvironment", { name: environmentName })
+              : t("vault.hint")}
+          </p>
 
-      <div className="flex gap-2">
-        <button
-          type="submit"
-          disabled={saving || !token.trim()}
-          className="inline-flex flex-1 items-center justify-center gap-2 rounded-md bg-accent px-3 py-2 text-xs font-medium text-accent-foreground disabled:cursor-not-allowed disabled:opacity-50"
-        >
-          {saving && <Loader2 className="size-3.5 animate-spin" aria-hidden />}
-          {t("vault.save")}
-        </button>
-        {stored && (
-          <button
-            type="button"
-            onClick={() => void handleDelete()}
-            disabled={saving}
-            className="rounded-md border border-red-500/40 px-3 py-2 text-xs text-red-300 hover:bg-red-500/10 disabled:opacity-50"
-          >
-            {t("vault.remove")}
-          </button>
-        )}
-      </div>
-    </form>
+          <label className="flex flex-col gap-1">
+            <span className="text-[10px] font-semibold uppercase tracking-wider text-muted">
+              {t("vault.tokenLabel")}
+            </span>
+            <input
+              type="password"
+              value={token}
+              onChange={(e) => setToken(e.target.value)}
+              placeholder={t("vault.tokenPlaceholder")}
+              autoComplete="off"
+              disabled={loading || saving}
+              className="rounded-md border border-border bg-background px-3 py-2 font-mono text-sm text-foreground outline-none focus:border-accent disabled:opacity-50"
+            />
+          </label>
+
+          {loading ? (
+            <div className="flex justify-center py-2">
+              <Loader2 className="size-5 animate-spin text-accent" aria-hidden />
+            </div>
+          ) : (
+            <>
+              {stored && (
+                <p className="text-xs text-success">
+                  {environmentName
+                    ? t("vault.storedForEnvironment", { name: environmentName })
+                    : t("vault.stored")}
+                </p>
+              )}
+
+              {error && (
+                <p className="text-xs text-red-300" role="alert">
+                  {error}
+                </p>
+              )}
+
+              <div className="flex gap-2">
+                <button
+                  type="submit"
+                  disabled={saving || !token.trim()}
+                  className="inline-flex flex-1 items-center justify-center gap-2 rounded-md bg-accent px-3 py-2 text-xs font-medium text-accent-foreground disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  {saving && (
+                    <Loader2 className="size-3.5 animate-spin" aria-hidden />
+                  )}
+                  {t("vault.save")}
+                </button>
+                {stored && (
+                  <button
+                    type="button"
+                    onClick={() => void handleDelete()}
+                    disabled={saving}
+                    className="rounded-md border border-red-500/40 px-3 py-2 text-xs text-red-300 hover:bg-red-500/10 disabled:opacity-50"
+                  >
+                    {t("vault.remove")}
+                  </button>
+                )}
+              </div>
+            </>
+          )}
+        </form>
+      )}
+    </div>
   );
 }

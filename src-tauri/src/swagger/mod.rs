@@ -5,9 +5,10 @@ use std::fs;
 use std::path::{Path, PathBuf};
 
 use openapiv3::{
-    MediaType, OpenAPI, Operation, Parameter, ReferenceOr, RequestBody, Schema, SchemaKind, Type,
+    APIKeyLocation, MediaType, OpenAPI, Operation, Parameter, ReferenceOr, RequestBody, Schema,
+    SchemaKind, SecurityScheme, Type,
 };
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use serde_json::{json, Map, Value};
 
 use crate::http::build_http_client;
@@ -15,7 +16,7 @@ use tauri::AppHandle;
 use tauri_plugin_dialog::DialogExt;
 use uuid::Uuid;
 
-#[derive(Debug, Clone, Serialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SwaggerEndpoint {
     pub method: String,
     pub path: String,
@@ -39,12 +40,14 @@ enum ImportFormat {
 const MAX_SCHEMA_DEPTH: usize = 4;
 const BODY_METHODS: &[&str] = &["POST", "PUT", "PATCH"];
 
-#[derive(Debug, Clone, Serialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SwaggerProject {
     pub id: String,
     pub title: String,
     pub version: String,
     pub base_url: Option<String>,
+    #[serde(default)]
+    pub uses_bearer_auth: bool,
     pub endpoints: Vec<SwaggerEndpoint>,
 }
 
@@ -473,6 +476,62 @@ fn normalize_openapi_server_url(url: &str) -> String {
     url.trim().trim_end_matches('/').to_string()
 }
 
+fn resolve_security_scheme<'a>(spec: &'a OpenAPI, name: &str) -> Option<&'a SecurityScheme> {
+    let components = spec.components.as_ref()?;
+    match components.security_schemes.get(name)? {
+        ReferenceOr::Item(scheme) => Some(scheme),
+        ReferenceOr::Reference { .. } => None,
+    }
+}
+
+fn security_scheme_uses_bearer_token(scheme: &SecurityScheme) -> bool {
+    match scheme {
+        SecurityScheme::HTTP { scheme, .. } => scheme.eq_ignore_ascii_case("bearer"),
+        SecurityScheme::OAuth2 { .. } | SecurityScheme::OpenIDConnect { .. } => true,
+        SecurityScheme::APIKey { location, name, .. } => {
+            matches!(location, APIKeyLocation::Header)
+                && name.eq_ignore_ascii_case("authorization")
+        }
+    }
+}
+
+fn collect_security_scheme_names(spec: &OpenAPI) -> Vec<String> {
+    let mut names = Vec::new();
+
+    if let Some(requirements) = &spec.security {
+        for requirement in requirements {
+            names.extend(requirement.keys().cloned());
+        }
+    }
+
+    for (_path, _method, operation) in spec.operations() {
+        if let Some(requirements) = &operation.security {
+            for requirement in requirements {
+                names.extend(requirement.keys().cloned());
+            }
+        }
+    }
+
+    names
+}
+
+fn openapi_uses_bearer_auth(spec: &OpenAPI) -> bool {
+    if collect_security_scheme_names(spec).iter().any(|name| {
+        resolve_security_scheme(spec, name).is_some_and(security_scheme_uses_bearer_token)
+    }) {
+        return true;
+    }
+
+    spec.components.as_ref().is_some_and(|components| {
+        components.security_schemes.values().any(|scheme_ref| {
+            matches!(
+                scheme_ref,
+                ReferenceOr::Item(scheme) if security_scheme_uses_bearer_token(scheme)
+            )
+        })
+    })
+}
+
 fn build_project(spec: OpenAPI) -> Result<SwaggerProject, String> {
     let title = spec.info.title.clone();
     let version = spec.info.version.clone();
@@ -513,6 +572,7 @@ fn build_project(spec: OpenAPI) -> Result<SwaggerProject, String> {
         title,
         version,
         base_url,
+        uses_bearer_auth: openapi_uses_bearer_auth(&spec),
         endpoints,
     })
 }

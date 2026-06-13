@@ -5,6 +5,22 @@ All notable changes to Aperio are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v0.2.3] - 2026-06-13 — Per-environment auth & persistence
+
+### Added
+
+- **Per-environment API tokens** — Tokens are stored encrypted per environment (PROD, Default, …), not per project; requests use the active environment’s Bearer token.
+- **Token in wizard & editor** — API token field in the import wizard (step „Umgebung“) and in the environment editor; optional hint when the spec defines Bearer auth.
+- **Environment picker in request builder** — When a project has multiple environments, choose the active one above the URL bar (synced with the sidebar).
+- **Project persistence** — Imported workspaces (projects + endpoints) are saved in SQLite (`aperio.db`) and survive app updates; workspace export/import includes the full database.
+- **Settings in database** — Active environment per project is stored in `app_settings` (existing `localStorage` entries are migrated once).
+- **Dev database** — `npm run tauri dev` uses a fresh `aperio-dev.db` on each start; production keeps `aperio.db`.
+
+### Changed
+
+- **Default environment name** — New environments use „Default“ instead of „Standard“.
+- **Token UI** — Removed project-level token block from project settings overview; manage tokens per environment via „Bearbeiten“.
+
 ## [v0.2.2] - 2026-06-13 — Import wizard, themes & UX
 
 ### Added

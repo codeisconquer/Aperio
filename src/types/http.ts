@@ -10,5 +10,5 @@ export interface SendRequestPayload {
   url: string;
   headers: string;
   body: string;
-  project_id?: string | null;
+  environment_id?: string | null;
 }

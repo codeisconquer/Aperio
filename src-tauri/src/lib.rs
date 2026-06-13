@@ -2,6 +2,8 @@ mod crypto;
 mod database;
 mod environments;
 mod http;
+mod projects;
+mod settings;
 mod swagger;
 mod vault;
 mod workspace;
@@ -62,12 +64,18 @@ pub fn run() {
             environments::get_environments,
             environments::save_environment_cmd,
             environments::delete_environment_cmd,
+            projects::get_projects_cmd,
+            projects::save_project_cmd,
+            projects::delete_project_cmd,
+            settings::get_app_setting_cmd,
+            settings::set_app_setting_cmd,
             swagger::import_swagger_file,
             swagger::import_swagger_from_url,
             vault::save_secure_token,
             vault::delete_secure_token_cmd,
             vault::has_secure_token_cmd,
-            vault::list_secure_token_projects_cmd,
+            vault::list_secure_token_environments_cmd,
+            vault::copy_secure_token_cmd,
             workspace::export_workspace,
             workspace::import_workspace
         ])

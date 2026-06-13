@@ -9,11 +9,16 @@ import {
   deleteEnvironment,
   environmentsForProject,
   getEnvironments,
-  loadActiveEnvironmentId,
-  persistActiveEnvironmentId,
   saveEnvironment,
 } from "../../lib/environments";
 import { clearHistory, deleteHistoryEntry, getHistory } from "../../lib/history";
+import { deleteProject, getProjects, saveProject } from "../../lib/projects";
+import {
+  loadActiveEnvironmentId,
+  loadAppSettings,
+  persistActiveEnvironmentId,
+  removeActiveEnvironmentForProject,
+} from "../../lib/settings";
 import { sendRequest } from "../../lib/sendRequest";
 import {
   applyEnvironmentToDraft,
@@ -21,6 +26,7 @@ import {
 } from "../../lib/substituteVariables";
 import { ProjectSettingsModal } from "../sidebar/ProjectSettingsModal";
 import { WorkspaceImportWizard } from "../sidebar/WorkspaceImportWizard";
+import { copySecureToken, saveSecureToken } from "../../lib/vault";
 import {
   cloneSwaggerProject,
   environmentCopyPayload,
@@ -127,15 +133,33 @@ export function AppLayout() {
     }
   }, []);
 
+  const refreshProjects = useCallback(async () => {
+    try {
+      const list = await getProjects();
+      setProjects(list);
+    } catch (err) {
+      console.error("Failed to load projects:", err);
+    }
+  }, []);
+
   useEffect(() => {
-    void refreshHistory();
-    void refreshEnvironments();
-  }, [refreshHistory, refreshEnvironments]);
+    void (async () => {
+      await loadAppSettings();
+      await Promise.all([refreshHistory(), refreshEnvironments(), refreshProjects()]);
+    })();
+  }, [refreshHistory, refreshEnvironments, refreshProjects]);
 
   const bootstrapProjectImport = useCallback(
     async (result: WorkspaceImportResult) => {
       const { project, environment } = result;
-      setProjects((prev) => [project, ...prev]);
+
+      try {
+        await saveProject(project);
+      } catch (err) {
+        console.error("Failed to persist imported project:", err);
+      }
+
+      setProjects((prev) => [project, ...prev.filter((item) => item.id !== project.id)]);
 
       const payload =
         environment === undefined
@@ -154,6 +178,9 @@ export function AppLayout() {
 
       try {
         const saved = await saveEnvironment(payload);
+        if (environment?.token?.trim()) {
+          await saveSecureToken(saved.id, environment.token.trim());
+        }
         setEnvironments((prev) =>
           [...prev, saved].sort((a, b) => a.name.localeCompare(b.name)),
         );
@@ -212,7 +239,9 @@ export function AppLayout() {
   const handleWorkspaceImported = useCallback(() => {
     void refreshHistory();
     void refreshEnvironments();
-  }, [refreshHistory, refreshEnvironments]);
+    void refreshProjects();
+    void loadAppSettings();
+  }, [refreshHistory, refreshEnvironments, refreshProjects]);
 
   const handleEnvironmentSaved = useCallback(
     (environment: Environment) => {
@@ -340,14 +369,11 @@ export function AppLayout() {
 
   const executeProjectRemove = useCallback(
     async (project: SwaggerProject) => {
-      const projectEnvs = environments.filter(
-        (env) => env.project_id === project.id,
-      );
-
       try {
-        await Promise.all(projectEnvs.map((env) => deleteEnvironment(env.id)));
+        await deleteProject(project.id);
       } catch (err) {
-        console.error("Failed to delete project environments:", err);
+        console.error("Failed to delete project:", err);
+        return;
       }
 
       setEnvironments((prev) =>
@@ -361,8 +387,8 @@ export function AppLayout() {
       if (activeProjectId === project.id) {
         setActiveProjectId(null);
         setActiveEnvironmentId(null);
-        persistActiveEnvironmentId(project.id, null);
       }
+      removeActiveEnvironmentForProject(project.id);
 
       if (selectedEndpointKey?.startsWith(`${project.id}:`)) {
         setSelectedEndpointKey(null);
@@ -371,7 +397,7 @@ export function AppLayout() {
         setError(null);
       }
     },
-    [activeProjectId, environments, selectedEndpointKey],
+    [activeProjectId, selectedEndpointKey],
   );
 
   const handleProjectRemove = useCallback(
@@ -387,6 +413,13 @@ export function AppLayout() {
   const handleProjectCopy = useCallback(
     async (project: SwaggerProject) => {
       const cloned = cloneSwaggerProject(project, t("projectSettings.copySuffix"));
+
+      try {
+        await saveProject(cloned);
+      } catch (err) {
+        console.error("Failed to persist copied project:", err);
+      }
+
       setProjects((prev) => [cloned, ...prev]);
 
       const sourceEnvs = environments.filter(
@@ -398,6 +431,7 @@ export function AppLayout() {
           const saved = await saveEnvironment(
             environmentCopyPayload(env, cloned.id, t("projectSettings.copySuffix")),
           );
+          await copySecureToken(env.id, saved.id);
           setEnvironments((prev) => [...prev, saved]);
         }
       } catch (err) {
@@ -444,6 +478,7 @@ export function AppLayout() {
             t("projectSettings.copySuffix"),
           ),
         );
+        await copySecureToken(environment.id, saved.id);
         handleEnvironmentSaved(saved);
       } catch (err) {
         console.error("Failed to copy environment:", err);
@@ -478,7 +513,7 @@ export function AppLayout() {
         const resolved = applyEnvironmentToDraft(payload, activeVariables);
         const result = await sendRequest({
           ...resolved,
-          project_id: activeProjectId,
+          environment_id: activeEnvironmentId,
         });
         setResponse(result);
         await refreshHistory();
@@ -489,7 +524,7 @@ export function AppLayout() {
         setLoading(false);
       }
     },
-    [activeProjectId, activeVariables, refreshHistory],
+    [activeEnvironmentId, activeVariables, refreshHistory],
   );
 
   return (
@@ -523,6 +558,9 @@ export function AppLayout() {
           draft={draft}
           pathParams={activePathParams}
           environmentVariables={activeVariables}
+          environments={projectEnvironments}
+          activeEnvironmentId={activeEnvironmentId}
+          onActiveEnvironmentChange={handleActiveEnvironmentChange}
           onDraftChange={setDraft}
           onSend={handleSend}
           onCurlImported={handleCurlImported}

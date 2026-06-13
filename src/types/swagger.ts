@@ -16,6 +16,7 @@ export interface SwaggerProject {
   title: string;
   version: string;
   base_url?: string | null;
+  uses_bearer_auth?: boolean;
   endpoints: SwaggerEndpoint[];
 }
 

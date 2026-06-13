@@ -12,6 +12,7 @@ export const BASE_URL_VARIABLE = "base_url";
 export interface ImportEnvironmentConfig {
   name: string;
   variables: Record<string, string>;
+  token?: string;
 }
 
 export interface WorkspaceImportResult {
@@ -65,7 +66,8 @@ export function importEnvironmentPayload(
       createRow(key, value),
     ),
   );
-  if (!name || Object.keys(variables).length === 0) return null;
+  const hasToken = Boolean(config.token?.trim());
+  if (!name || (Object.keys(variables).length === 0 && !hasToken)) return null;
 
   return {
     name,

@@ -49,6 +49,7 @@ pub fn parse_serverless_content(content: &str) -> Result<SwaggerProject, String>
         title,
         version,
         base_url,
+        uses_bearer_auth: false,
         endpoints,
     })
 }

@@ -10,7 +10,13 @@ import {
 } from "../../lib/keyValueRows";
 import { deleteEnvironment, saveEnvironment } from "../../lib/environments";
 import { parseEnvironmentVariables } from "../../lib/substituteVariables";
+import {
+  deleteSecureToken,
+  hasSecureToken,
+  saveSecureToken,
+} from "../../lib/vault";
 import type { Environment } from "../../types/environment";
+import { EnvironmentTokenField } from "../vault/EnvironmentTokenField";
 
 function variablesToRows(variablesJson: string): KeyValueRow[] {
   const record = parseEnvironmentVariables(variablesJson);
@@ -46,13 +52,47 @@ export function EnvironmentEditorForm({
   const [rows, setRows] = useState<KeyValueRow[]>(() =>
     variablesToRows(environment?.variables ?? "{}"),
   );
+  const [token, setToken] = useState("");
+  const [tokenStored, setTokenStored] = useState(false);
+  const [tokenLoading, setTokenLoading] = useState(!isNew);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     setName(environment?.name ?? "");
     setRows(variablesToRows(environment?.variables ?? "{}"));
+    setToken("");
     setError(null);
+
+    if (!environment?.id) {
+      setTokenStored(false);
+      setTokenLoading(false);
+      return;
+    }
+
+    let cancelled = false;
+    setTokenLoading(true);
+
+    void (async () => {
+      try {
+        const exists = await hasSecureToken(environment.id);
+        if (!cancelled) {
+          setTokenStored(exists);
+        }
+      } catch (err) {
+        if (!cancelled) {
+          setError(err instanceof Error ? err.message : String(err));
+        }
+      } finally {
+        if (!cancelled) {
+          setTokenLoading(false);
+        }
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
   }, [environment]);
 
   async function handleSave(e: React.FormEvent) {
@@ -66,7 +106,30 @@ export function EnvironmentEditorForm({
         variables: rowsToVariablesJson(rows),
         project_id: projectId,
       });
+
+      if (token.trim()) {
+        await saveSecureToken(saved.id, token);
+        setTokenStored(true);
+        setToken("");
+      }
+
       onSaved(saved);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err));
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function handleRemoveToken() {
+    if (!environment?.id) return;
+
+    setSaving(true);
+    setError(null);
+    try {
+      await deleteSecureToken(environment.id);
+      setTokenStored(false);
+      setToken("");
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
     } finally {
@@ -130,6 +193,16 @@ export function EnvironmentEditorForm({
         </span>
         <KeyValueTable rows={rows} onChange={setRows} highlightVariables />
       </div>
+
+      <EnvironmentTokenField
+        token={token}
+        onTokenChange={setToken}
+        stored={tokenStored}
+        environmentName={name.trim() || environment?.name}
+        disabled={saving || tokenLoading}
+        onRemove={!isNew && tokenStored ? () => void handleRemoveToken() : undefined}
+        removing={saving}
+      />
 
       {error && (
         <p className="text-xs text-red-300" role="alert">

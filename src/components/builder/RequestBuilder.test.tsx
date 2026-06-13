@@ -4,6 +4,7 @@ import { useState } from "react";
 import { I18nextProvider } from "react-i18next";
 import { describe, expect, it, vi } from "vitest";
 import i18n from "../../i18n";
+import type { Environment } from "../../types/environment";
 import { emptyRequestDraft } from "../../types/history";
 import { RequestBuilder } from "./RequestBuilder";
 
@@ -11,14 +12,21 @@ function RequestBuilderHarness({
   onSend,
   pathParams = [],
   environmentVariables = {},
+  environments = [],
+  activeEnvironmentId = null,
+  onActiveEnvironmentChange,
   initialDraft,
 }: {
   onSend: (payload: ReturnType<typeof emptyRequestDraft>) => void;
   pathParams?: string[];
   environmentVariables?: Record<string, string>;
+  environments?: Environment[];
+  activeEnvironmentId?: string | null;
+  onActiveEnvironmentChange?: (id: string | null) => void;
   initialDraft?: ReturnType<typeof emptyRequestDraft>;
 }) {
   const [draft, setDraft] = useState(initialDraft ?? emptyRequestDraft());
+  const [activeEnvId, setActiveEnvId] = useState(activeEnvironmentId);
 
   return (
     <I18nextProvider i18n={i18n}>
@@ -26,6 +34,11 @@ function RequestBuilderHarness({
         draft={draft}
         pathParams={pathParams}
         environmentVariables={environmentVariables}
+        environments={environments}
+        activeEnvironmentId={activeEnvId}
+        onActiveEnvironmentChange={
+          onActiveEnvironmentChange ?? ((id) => setActiveEnvId(id))
+        }
         onDraftChange={setDraft}
         onSend={onSend}
         loading={false}
@@ -87,6 +100,39 @@ describe("RequestBuilder", () => {
         url: "http://example.com/api/v1/users/jviebrock",
       }),
     );
+  });
+
+  it("shows environment selector when multiple environments exist", () => {
+    const environments: Environment[] = [
+      { id: "env-prod", name: "PROD", variables: "{}", project_id: "p1" },
+      { id: "env-std", name: "Standard", variables: "{}", project_id: "p1" },
+    ];
+
+    render(
+      <RequestBuilderHarness
+        onSend={vi.fn()}
+        environments={environments}
+        activeEnvironmentId="env-prod"
+      />,
+    );
+
+    expect(screen.getByLabelText(/active environment/i)).toBeInTheDocument();
+    expect(screen.getByRole("option", { name: "PROD" })).toBeInTheDocument();
+    expect(screen.getByRole("option", { name: "Standard" })).toBeInTheDocument();
+  });
+
+  it("hides environment selector with at most one environment", () => {
+    render(
+      <RequestBuilderHarness
+        onSend={vi.fn()}
+        environments={[
+          { id: "env-prod", name: "PROD", variables: "{}", project_id: "p1" },
+        ]}
+        activeEnvironmentId="env-prod"
+      />,
+    );
+
+    expect(screen.queryByLabelText(/active environment/i)).not.toBeInTheDocument();
   });
 
   it("toggles between template and resolved URL preview", async () => {

@@ -22,6 +22,7 @@ import {
   rowsToRecord,
   type KeyValueRow,
 } from "../../lib/keyValueRows";
+import { EnvironmentTokenField } from "../vault/EnvironmentTokenField";
 import { isTauriDialogCancel } from "../../lib/tauriDialog";
 import {
   importSwaggerFile,
@@ -66,6 +67,7 @@ export function WorkspaceImportWizard({
   const [envRows, setEnvRows] = useState<KeyValueRow[]>(() =>
     ensureTrailingEmptyRow([]),
   );
+  const [envToken, setEnvToken] = useState("");
 
   const wizardSteps = useMemo(
     () => [
@@ -84,6 +86,7 @@ export function WorkspaceImportWizard({
     );
     setEnvName(config.name);
     setEnvRows(importEnvironmentRows(config));
+    setEnvToken("");
   }
 
   async function loadProject(
@@ -126,9 +129,15 @@ export function WorkspaceImportWizard({
     if (!project) return;
 
     const variables = rowsToRecord(envRows);
+    const trimmedToken = envToken.trim();
+    const hasVariables = Object.keys(variables).length > 0;
     const config: ImportEnvironmentConfig | null =
-      envName.trim() && Object.keys(variables).length > 0
-        ? { name: envName.trim(), variables }
+      envName.trim() && (hasVariables || trimmedToken)
+        ? {
+            name: envName.trim(),
+            variables,
+            token: trimmedToken || undefined,
+          }
         : null;
 
     onImported({ project, environment: config });
@@ -438,6 +447,18 @@ export function WorkspaceImportWizard({
                   highlightVariables
                 />
               </div>
+
+              <EnvironmentTokenField
+                token={envToken}
+                onTokenChange={setEnvToken}
+                environmentName={envName.trim() || undefined}
+              />
+
+              {project.uses_bearer_auth && (
+                <p className="text-xs leading-relaxed text-muted">
+                  {t("workspaceImport.wizard.authDetectedHint")}
+                </p>
+              )}
 
               <p className="text-[10px] leading-relaxed text-subtle">
                 {t("workspaceImport.wizard.environmentOptional")}

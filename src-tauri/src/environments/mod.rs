@@ -4,6 +4,7 @@ use tauri::State;
 use uuid::Uuid;
 
 use crate::database::DbPool;
+use crate::vault;
 
 #[derive(Debug, Clone, Serialize)]
 pub struct Environment {
@@ -130,6 +131,8 @@ pub fn delete_environment(pool: &DbPool, id: &str) -> Result<(), String> {
 
     conn.execute("DELETE FROM environments WHERE id = ?1", params![id])
         .map_err(|e| format!("Failed to delete environment: {e}"))?;
+
+    vault::delete_secure_token(pool, id)?;
 
     Ok(())
 }

@@ -48,7 +48,7 @@
     "openMenu": "Projektraum-Einstellungen",
     "manageEnvironments": "Einstellungen…",
     "authHeading": "Authentifizierung",
-    "defaultEnvironmentName": "Standard",
+    "defaultEnvironmentName": "Default",
     "backToEnvironments": "Zurück zu Umgebungen",
     "title": "Projektraum-Einstellungen",
     "close": "Schließen",
@@ -93,7 +93,7 @@
       "next": "Weiter",
       "finish": "Import abschließen",
       "loadedTitle": "Projektraum geladen",
-      "loadedHint": "Im nächsten Schritt richtest du die Standard-Umgebung ein — dort legst du Variablen wie base_url fest.",
+      "loadedHint": "Im nächsten Schritt richtest du die Default-Umgebung ein — dort legst du Variablen wie base_url fest.",
       "projectName": "Name",
       "projectVersion": "Version",
       "endpointCount": "Endpunkte",
@@ -102,9 +102,10 @@
       "detectedServer": "Server aus Spec",
       "noServer": "Kein Server definiert",
       "baseUrlPlaceholderHint": "Die Endpoint-URLs nutzen {{base_url}} als Platzhalter. Im nächsten Schritt kannst du den Wert anpassen.",
-      "environmentTitle": "Standard-Umgebung einrichten",
-      "environmentHint": "Jeder Projektraum hat eigene Umgebungen. Variablen ersetzen {{platzhalter}} in URLs, Headern und Body.",
-      "environmentOptional": "Ohne Variablen wird keine Umgebung angelegt — du kannst sie später unter Projektraum-Einstellungen hinzufügen."
+      "environmentTitle": "Default-Umgebung einrichten",
+      "environmentHint": "Variablen und API-Token gelten nur für diese Umgebung — z. B. unterschiedliche Tokens für Default und PROD.",
+      "authDetectedHint": "Die API-Spec definiert Bearer-Authentifizierung. Der Token wird für diese Umgebung gespeichert und bei Requests mitgeschickt.",
+      "environmentOptional": "Ohne Variablen und ohne Token wird keine Umgebung angelegt — du kannst sie später unter Projektraum-Einstellungen hinzufügen."
     }
   },
   "export": {
@@ -145,6 +146,7 @@
   },
   "builder": {
     "title": "Request",
+    "activeEnvironment": "Aktive Umgebung",
     "method": "Methode",
     "url": "URL",
     "urlPlaceholder": "https://api.example.com/endpoint oder /v1/pfad",
@@ -202,10 +204,13 @@
     "open": "API-Token verwalten",
     "close": "Schließen",
     "project": "Projektraum",
-    "hint": "Der Token wird lokal verschlüsselt und bei Requests aus diesem Projektraum als Bearer-Token mitgesendet.",
+    "hint": "Der Token wird lokal verschlüsselt und bei Requests mit der aktiven Umgebung als Bearer-Token mitgesendet.",
+    "hintForEnvironment": "Der Token wird lokal verschlüsselt und bei Requests mit der Umgebung „{{name}}“ als Bearer-Token mitgesendet.",
+    "selectEnvironmentFirst": "Wähle oben eine aktive Umgebung, um einen API-Token zu hinterlegen.",
     "tokenLabel": "API-Token",
     "tokenPlaceholder": "Token hier einfügen",
-    "stored": "Für diesen Projektraum ist ein Token hinterlegt.",
+    "stored": "Für diese Umgebung ist ein Token hinterlegt.",
+    "storedForEnvironment": "Für die Umgebung „{{name}}“ ist ein Token hinterlegt.",
     "save": "Token speichern",
     "remove": "Entfernen"
   },

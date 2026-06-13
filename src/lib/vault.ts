@@ -1,22 +1,32 @@
 import { invoke } from "@tauri-apps/api/core";
 
 export async function saveSecureToken(
-  projectId: string,
+  environmentId: string,
   token: string,
 ): Promise<void> {
   await invoke("save_secure_token", {
-    payload: { project_id: projectId, token },
+    payload: { environment_id: environmentId, token },
   });
 }
 
-export async function deleteSecureToken(projectId: string): Promise<void> {
-  await invoke("delete_secure_token_cmd", { projectId });
+export async function deleteSecureToken(environmentId: string): Promise<void> {
+  await invoke("delete_secure_token_cmd", { environmentId });
 }
 
-export async function hasSecureToken(projectId: string): Promise<boolean> {
-  return invoke<boolean>("has_secure_token_cmd", { projectId });
+export async function hasSecureToken(environmentId: string): Promise<boolean> {
+  return invoke<boolean>("has_secure_token_cmd", { environmentId });
 }
 
-export async function listSecureTokenProjects(): Promise<string[]> {
-  return invoke<string[]>("list_secure_token_projects_cmd");
+export async function listSecureTokenEnvironments(): Promise<string[]> {
+  return invoke<string[]>("list_secure_token_environments_cmd");
+}
+
+export async function copySecureToken(
+  fromEnvironmentId: string,
+  toEnvironmentId: string,
+): Promise<void> {
+  await invoke("copy_secure_token_cmd", {
+    fromEnvironmentId,
+    toEnvironmentId,
+  });
 }

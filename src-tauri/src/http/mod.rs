@@ -40,7 +40,7 @@ pub struct SendRequestPayload {
     pub url: String,
     pub headers: String,
     pub body: String,
-    pub project_id: Option<String>,
+    pub environment_id: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, PartialEq)]
@@ -72,16 +72,16 @@ pub fn parse_headers(raw: &str) -> Result<HashMap<String, String>, String> {
         .collect())
 }
 
-pub fn apply_project_auth(
+pub fn apply_environment_auth(
     pool: &DbPool,
-    project_id: Option<&str>,
+    environment_id: Option<&str>,
     headers: &mut HashMap<String, String>,
 ) -> Result<(), String> {
-    let Some(project_id) = project_id else {
+    let Some(environment_id) = environment_id else {
         return Ok(());
     };
 
-    if let Some(token) = vault::get_decrypted_token(pool, project_id)? {
+    if let Some(token) = vault::get_decrypted_token(pool, environment_id)? {
         let has_authorization = headers
             .keys()
             .any(|name| name.eq_ignore_ascii_case("authorization"));
@@ -177,7 +177,7 @@ pub async fn send_request(
     let body_str = payload.body.clone();
 
     let mut headers = parse_headers(&headers_str)?;
-    apply_project_auth(&pool, payload.project_id.as_deref(), &mut headers)?;
+    apply_environment_auth(&pool, payload.environment_id.as_deref(), &mut headers)?;
 
     let http_response = execute_http_request(
         client.inner(),

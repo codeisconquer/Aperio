@@ -43,7 +43,7 @@ CREATE TABLE IF NOT EXISTS history (
 );
 
 CREATE TABLE IF NOT EXISTS secure_tokens (
-    project_id TEXT PRIMARY KEY,
+    environment_id TEXT PRIMARY KEY,
     encrypted_token TEXT NOT NULL
 );
 
@@ -52,6 +52,17 @@ CREATE TABLE IF NOT EXISTS environments (
     name TEXT NOT NULL,
     variables TEXT NOT NULL DEFAULT '{}',
     project_id TEXT
+);
+
+CREATE TABLE IF NOT EXISTS projects (
+    id TEXT PRIMARY KEY,
+    payload TEXT NOT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS app_settings (
+    key TEXT PRIMARY KEY,
+    value TEXT NOT NULL
 );
 "#;
 
@@ -71,6 +82,44 @@ fn migrate_schema(conn: &Connection) -> Result<(), String> {
             .map_err(|e| format!("Failed to migrate environments schema: {e}"))?;
     }
 
+    migrate_secure_tokens(conn)?;
+
+    Ok(())
+}
+
+fn migrate_secure_tokens(conn: &Connection) -> Result<(), String> {
+    let mut stmt = conn
+        .prepare("PRAGMA table_info(secure_tokens)")
+        .map_err(|e| format!("Failed to inspect secure_tokens schema: {e}"))?;
+
+    let columns = stmt
+        .query_map([], |row| row.get::<_, String>(1))
+        .map_err(|e| format!("Failed to read secure_tokens schema: {e}"))?
+        .collect::<Result<Vec<_>, _>>()
+        .map_err(|e| format!("Failed to read secure_tokens schema: {e}"))?;
+
+    if columns.is_empty() || columns.iter().any(|name| name == "environment_id") {
+        return Ok(());
+    }
+
+    if !columns.iter().any(|name| name == "project_id") {
+        return Ok(());
+    }
+
+    conn.execute_batch(
+        "CREATE TABLE secure_tokens_migrated (
+            environment_id TEXT PRIMARY KEY,
+            encrypted_token TEXT NOT NULL
+        );
+        INSERT INTO secure_tokens_migrated (environment_id, encrypted_token)
+        SELECT e.id, st.encrypted_token
+        FROM secure_tokens st
+        INNER JOIN environments e ON e.project_id = st.project_id;
+        DROP TABLE secure_tokens;
+        ALTER TABLE secure_tokens_migrated RENAME TO secure_tokens;",
+    )
+    .map_err(|e| format!("Failed to migrate secure_tokens schema: {e}"))?;
+
     Ok(())
 }
 
@@ -80,18 +129,39 @@ pub fn init_schema(conn: &Connection) -> Result<(), String> {
     migrate_schema(conn)
 }
 
+pub fn database_file_name() -> &'static str {
+    if cfg!(debug_assertions) {
+        "aperio-dev.db"
+    } else {
+        "aperio.db"
+    }
+}
+
 pub fn db_path(app: &AppHandle) -> Result<PathBuf, String> {
     let dir = app
         .path()
         .app_data_dir()
         .map_err(|e| format!("Failed to resolve app data directory: {e}"))?;
     std::fs::create_dir_all(&dir).map_err(|e| format!("Failed to create app data directory: {e}"))?;
-    Ok(dir.join("aperio.db"))
+    Ok(dir.join(database_file_name()))
 }
 
 pub fn init_db(app: &AppHandle) -> Result<DbPool, String> {
     let path = db_path(app)?;
-    let manager = SqliteConnectionManager::file(path);
+
+    if cfg!(debug_assertions) {
+        if path.exists() {
+            std::fs::remove_file(&path).map_err(|e| {
+                format!("Failed to reset dev database at {}: {e}", path.display())
+            })?;
+        }
+        eprintln!(
+            "Dev mode: using fresh database at {}",
+            path.display()
+        );
+    }
+
+    let manager = SqliteConnectionManager::file(&path);
     let pool = Pool::new(manager).map_err(|e| format!("Failed to create database pool: {e}"))?;
 
     let conn = pool
@@ -228,6 +298,11 @@ mod tests {
         let conn = pool.get().expect("conn");
         init_schema(&conn).expect("schema");
         TestDb { _dir: dir, pool }
+    }
+
+    #[test]
+    fn debug_build_uses_dev_database_filename() {
+        assert_eq!(database_file_name(), "aperio-dev.db");
     }
 
     #[test]

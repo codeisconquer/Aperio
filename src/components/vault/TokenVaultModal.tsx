@@ -5,6 +5,8 @@ import { TokenVaultSection } from "./TokenVaultSection";
 
 interface TokenVaultModalProps {
   project: SwaggerProject;
+  environmentId: string | null;
+  environmentName?: string | null;
   onClose: () => void;
   onChanged: () => void;
 }
@@ -12,6 +14,8 @@ interface TokenVaultModalProps {
 /** Standalone modal wrapper; prefer TokenVaultSection inside ProjectSettingsModal. */
 export function TokenVaultModal({
   project,
+  environmentId,
+  environmentName,
   onClose,
   onChanged,
 }: TokenVaultModalProps) {
@@ -47,7 +51,12 @@ export function TokenVaultModal({
           <p className="mb-3 truncate text-sm font-medium text-foreground">
             {project.title}
           </p>
-          <TokenVaultSection projectId={project.id} onChanged={onChanged} />
+          <TokenVaultSection
+            key={environmentId ?? "none"}
+            environmentId={environmentId}
+            environmentName={environmentName}
+            onChanged={onChanged}
+          />
         </div>
       </div>
     </div>
