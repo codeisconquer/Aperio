@@ -100,7 +100,7 @@ export function ResponseViewer({
   function renderBody() {
     if (!response || !displayBody) {
       return (
-        <p className="text-xs text-foreground/40">{t("response.noBody")}</p>
+        <p className="text-xs text-muted">{t("response.noBody")}</p>
       );
     }
 
@@ -109,7 +109,7 @@ export function ResponseViewer({
         <img
           src={buildImageDataUrl(contentType, response.body)}
           alt={t("response.imagePreview")}
-          className="max-h-full max-w-full rounded-md border border-white/10 bg-background object-contain"
+          className="max-h-full max-w-full rounded-md border border-border bg-background object-contain"
         />
       );
     }
@@ -119,14 +119,14 @@ export function ResponseViewer({
         return <JsonTreeView data={parsedJson} />;
       }
       return (
-        <pre className="rounded-md border border-white/10 bg-background p-3 font-mono text-xs leading-relaxed text-foreground whitespace-pre-wrap break-words">
+        <pre className="rounded-md border border-border bg-background p-3 font-mono text-xs leading-relaxed text-foreground whitespace-pre-wrap break-words">
           {displayBody}
         </pre>
       );
     }
 
     return (
-      <pre className="rounded-md border border-white/10 bg-background p-3 font-mono text-xs leading-relaxed text-foreground whitespace-pre-wrap break-words">
+      <pre className="rounded-md border border-border bg-background p-3 font-mono text-xs leading-relaxed text-foreground whitespace-pre-wrap break-words">
         {displayBody}
       </pre>
     );
@@ -135,9 +135,9 @@ export function ResponseViewer({
   return (
     <aside
       data-testid="layout-response"
-      className="flex h-full w-96 shrink-0 flex-col border-l border-white/10 bg-surface"
+      className="flex h-full w-96 shrink-0 flex-col border-l border-border bg-surface"
     >
-      <header className="border-b border-white/10 px-4 py-3">
+      <header className="border-b border-border px-4 py-3">
         <h2 className="text-sm font-semibold text-foreground">
           {t("response.title")}
         </h2>
@@ -149,7 +149,7 @@ export function ResponseViewer({
             className="size-8 animate-spin text-accent"
             aria-hidden
           />
-          <p className="text-sm text-foreground/50">{t("response.loading")}</p>
+          <p className="text-sm text-muted">{t("response.loading")}</p>
         </div>
       )}
 
@@ -167,16 +167,16 @@ export function ResponseViewer({
           data-testid="response-empty"
           className="flex flex-1 flex-col items-center justify-center gap-3 p-6 text-center"
         >
-          <Inbox className="size-10 text-foreground/20" aria-hidden />
-          <p className="text-sm text-foreground/40">{t("response.empty")}</p>
+          <Inbox className="size-10 text-muted/40" aria-hidden />
+          <p className="text-sm text-muted">{t("response.empty")}</p>
         </div>
       )}
 
       {!loading && response && (
         <div className="flex flex-1 flex-col overflow-hidden">
-          <div className="flex gap-4 border-b border-white/10 px-4 py-3 text-sm">
+          <div className="flex gap-4 border-b border-border px-4 py-3 text-sm">
             <div>
-              <span className="text-foreground/50">{t("response.status")}</span>
+              <span className="text-muted">{t("response.status")}</span>
               <p
                 data-testid="response-status"
                 className={`font-mono font-semibold ${statusColor(response.status)}`}
@@ -185,7 +185,7 @@ export function ResponseViewer({
               </p>
             </div>
             <div>
-              <span className="text-foreground/50">
+              <span className="text-muted">
                 {t("response.duration")}
               </span>
               <p
@@ -200,18 +200,18 @@ export function ResponseViewer({
           <div className="flex min-h-0 flex-1 flex-col overflow-hidden p-4">
             <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
               <div className="flex items-center gap-2">
-                <span className="text-xs font-medium uppercase tracking-wider text-foreground/50">
+                <span className="text-xs font-medium uppercase tracking-wider text-muted">
                   {t("response.body")}
                 </span>
                 {isJson && (
-                  <div className="inline-flex rounded-md border border-white/10 bg-background/60 p-0.5">
+                  <div className="inline-flex rounded-md border border-border bg-background/60 p-0.5">
                     <button
                       type="button"
                       onClick={() => setBodyViewMode("tree")}
                       className={`rounded px-2 py-0.5 text-[10px] font-medium transition-colors ${
                         bodyViewMode === "tree"
                           ? "bg-accent/20 text-accent"
-                          : "text-foreground/60 hover:text-foreground"
+                          : "text-muted hover:text-foreground"
                       }`}
                     >
                       {t("response.viewTree")}
@@ -222,7 +222,7 @@ export function ResponseViewer({
                       className={`rounded px-2 py-0.5 text-[10px] font-medium transition-colors ${
                         bodyViewMode === "raw"
                           ? "bg-accent/20 text-accent"
-                          : "text-foreground/60 hover:text-foreground"
+                          : "text-muted hover:text-foreground"
                       }`}
                     >
                       {t("response.viewRaw")}
@@ -238,7 +238,7 @@ export function ResponseViewer({
                       type="button"
                       onClick={() => void handleCopyBody()}
                       title={t("response.copyBody")}
-                      className="inline-flex items-center gap-1 rounded-md border border-white/10 bg-background/60 px-2 py-1 text-[10px] font-medium text-foreground/70 transition-colors hover:border-accent/40 hover:text-accent"
+                      className="inline-flex items-center gap-1 rounded-md border border-border bg-background/60 px-2 py-1 text-[10px] font-medium text-muted transition-colors hover:border-accent/40 hover:text-accent"
                     >
                       {copied ? (
                         <Check className="size-3.5 text-success" aria-hidden />
@@ -253,7 +253,7 @@ export function ResponseViewer({
                     onClick={() => void handleSaveBody()}
                     disabled={saving}
                     title={t("response.save")}
-                    className="inline-flex items-center gap-1 rounded-md border border-white/10 bg-background/60 px-2 py-1 text-[10px] font-medium text-foreground/70 transition-colors hover:border-accent/40 hover:text-accent disabled:opacity-50"
+                    className="inline-flex items-center gap-1 rounded-md border border-border bg-background/60 px-2 py-1 text-[10px] font-medium text-muted transition-colors hover:border-accent/40 hover:text-accent disabled:opacity-50"
                   >
                     {saving ? (
                       <Loader2 className="size-3.5 animate-spin" aria-hidden />

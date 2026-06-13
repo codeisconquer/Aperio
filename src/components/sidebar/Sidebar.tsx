@@ -1,7 +1,8 @@
 import { useTranslation } from "react-i18next";
-import { Clock, FolderOpen, Layers } from "lucide-react";
+import { Clock, FolderOpen, Plus } from "lucide-react";
 import { CollapsibleSection } from "../common/CollapsibleSection";
 import { LanguageSwitcher } from "../common/LanguageSwitcher";
+import { ThemeToggle } from "../common/ThemeToggle";
 import { EnvironmentSelector } from "../environments/EnvironmentSelector";
 import { WorkspaceSettings } from "../settings/WorkspaceSettings";
 import { HistoryList } from "./HistoryList";
@@ -22,6 +23,7 @@ interface SidebarProps {
   onHistorySelect: (entry: HistoryEntry) => void;
   onHistoryDelete: (id: string) => void;
   onHistoryClearAll: () => void;
+  onNewRequest: () => void;
   projects: SwaggerProject[];
   selectedEndpointKey: string | null;
   onOpenOpenApiImport: () => void;
@@ -47,6 +49,7 @@ export function Sidebar({
   onHistorySelect,
   onHistoryDelete,
   onHistoryClearAll,
+  onNewRequest,
   projects,
   selectedEndpointKey,
   onOpenOpenApiImport,
@@ -61,11 +64,16 @@ export function Sidebar({
   return (
     <aside
       data-testid="layout-sidebar"
-      className="flex h-full w-64 shrink-0 flex-col border-r border-white/10 bg-surface"
+      className="flex h-full w-64 shrink-0 flex-col border-r border-border bg-surface"
     >
-      <header className="flex items-center justify-between border-b border-white/10 px-4 py-3">
+      <header className="flex items-center justify-between border-b border-border px-4 py-3">
         <div className="flex items-center gap-2">
-          <Layers className="size-5 text-accent" aria-hidden />
+          <img
+            src="/aperio-logo.png"
+            alt=""
+            aria-hidden
+            className="size-5 shrink-0 rounded-sm object-contain"
+          />
           <span className="text-sm font-semibold tracking-wide text-foreground">
             {t("app.title")}
           </span>
@@ -80,6 +88,17 @@ export function Sidebar({
         onCreate={onCreateEnvironment}
         onEdit={onEditEnvironment}
       />
+
+      <div className="border-b border-border px-3 py-3">
+        <button
+          type="button"
+          onClick={onNewRequest}
+          className="inline-flex w-full items-center justify-center gap-2 rounded-md border border-border bg-background/40 px-3 py-2 text-xs font-medium text-foreground transition-colors hover:border-accent/40 hover:bg-accent/10 hover:text-accent"
+        >
+          <Plus className="size-3.5" aria-hidden />
+          {t("sidebar.newRequest")}
+        </button>
+      </div>
 
       <nav className="flex-1 overflow-y-auto p-3">
         <CollapsibleSection
@@ -112,9 +131,14 @@ export function Sidebar({
         </CollapsibleSection>
       </nav>
 
-      <footer className="flex flex-col gap-3 border-t border-white/10 px-4 py-3">
+      <footer className="flex flex-col gap-3 border-t border-border px-4 py-3">
         <WorkspaceSettings onImported={onWorkspaceImported} />
-        <LanguageSwitcher />
+        <div className="flex items-center gap-2">
+          <div className="min-w-0 flex-1">
+            <LanguageSwitcher />
+          </div>
+          <ThemeToggle />
+        </div>
       </footer>
     </aside>
   );

@@ -48,7 +48,7 @@ export function ProjectSettingsMenu({
         aria-expanded={open}
         aria-haspopup="menu"
         className={`rounded p-1.5 transition-colors hover:bg-background/60 ${
-          open ? "text-accent" : "text-foreground/40 hover:text-foreground/70"
+          open ? "text-accent" : "text-subtle hover:text-muted"
         }`}
       >
         <Settings className="size-3.5" aria-hidden />
@@ -57,7 +57,7 @@ export function ProjectSettingsMenu({
       {open && (
         <div
           role="menu"
-          className="absolute right-0 top-full z-30 mt-1 min-w-52 overflow-hidden rounded-md border border-white/10 bg-surface py-1 shadow-lg"
+          className="absolute right-0 top-full z-30 mt-1 min-w-52 overflow-hidden rounded-md border border-border bg-surface py-1 shadow-lg"
         >
           <button
             type="button"
@@ -74,10 +74,10 @@ export function ProjectSettingsMenu({
             onClick={() => run(() => onCopyProject(project))}
             className="flex w-full items-center gap-2 px-3 py-2 text-left text-xs text-foreground hover:bg-background/60"
           >
-            <Copy className="size-3.5 text-foreground/50" aria-hidden />
+            <Copy className="size-3.5 text-muted" aria-hidden />
             {t("projectSettings.copyProject")}
           </button>
-          <div className="my-1 border-t border-white/10" />
+          <div className="my-1 border-t border-border" />
           <button
             type="button"
             role="menuitem"

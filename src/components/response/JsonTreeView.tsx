@@ -60,9 +60,9 @@ function JsonNode({
         {name !== undefined && (
           <span className="text-accent">"{name}"</span>
         )}
-        {name !== undefined && <span className="text-foreground/50">: </span>}
+        {name !== undefined && <span className="text-muted">: </span>}
         <span className="text-warning">{valuePreview(value, t)}</span>
-        <span className="text-foreground/40">{comma}</span>
+        <span className="text-subtle">{comma}</span>
       </div>
     );
   }
@@ -75,33 +75,33 @@ function JsonNode({
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        className="group inline-flex max-w-full items-start gap-1 text-left font-mono text-xs leading-relaxed text-foreground/80 hover:text-foreground"
+        className="group inline-flex max-w-full items-start gap-1 text-left font-mono text-xs leading-relaxed text-foreground hover:text-foreground"
       >
         {open ? (
-          <ChevronDown className="mt-0.5 size-3 shrink-0 text-foreground/40" />
+          <ChevronDown className="mt-0.5 size-3 shrink-0 text-subtle" />
         ) : (
-          <ChevronRight className="mt-0.5 size-3 shrink-0 text-foreground/40" />
+          <ChevronRight className="mt-0.5 size-3 shrink-0 text-subtle" />
         )}
         <span>
           {name !== undefined && (
             <>
               <span className="text-accent">"{name}"</span>
-              <span className="text-foreground/50">: </span>
+              <span className="text-muted">: </span>
             </>
           )}
-          <span className="text-foreground/50">{openBracket}</span>
+          <span className="text-muted">{openBracket}</span>
           {!open && (
-            <span className="text-foreground/40">
+            <span className="text-subtle">
               {" "}
               {isArray ? t("response.jsonTree.items", { count: value.length }) : "…"}
               {" "}
             </span>
           )}
           {!open && (
-            <span className="text-foreground/50">{closeBracket}</span>
+            <span className="text-muted">{closeBracket}</span>
           )}
           {!open && (
-            <span className="text-foreground/40">{comma}</span>
+            <span className="text-subtle">{comma}</span>
           )}
         </span>
       </button>
@@ -128,11 +128,11 @@ function JsonNode({
 
       {open && (
         <div
-          className="font-mono text-xs text-foreground/50"
+          className="font-mono text-xs text-muted"
           style={{ paddingLeft: depth * 14 }}
         >
           {closeBracket}
-          <span className="text-foreground/40">{comma}</span>
+          <span className="text-subtle">{comma}</span>
         </div>
       )}
     </div>
@@ -151,15 +151,15 @@ export function JsonTreeView({ data }: JsonTreeViewProps) {
 
   if (!isObject) {
     return (
-      <div className="rounded-md border border-white/10 bg-background p-3 font-mono text-xs text-warning">
+      <div className="rounded-md border border-border bg-background p-3 font-mono text-xs text-warning">
         {valuePreview(data, t)}
       </div>
     );
   }
 
   return (
-    <div className="rounded-md border border-white/10 bg-background p-2">
-      <div className="font-mono text-xs text-foreground/50">{isArray ? "[" : "{"}</div>
+    <div className="rounded-md border border-border bg-background p-2">
+      <div className="font-mono text-xs text-muted">{isArray ? "[" : "{"}</div>
       {entries.map(([name, value], index) => (
         <JsonNode
           key={`${name}-${index}`}
@@ -170,7 +170,7 @@ export function JsonTreeView({ data }: JsonTreeViewProps) {
           t={t}
         />
       ))}
-      <div className="font-mono text-xs text-foreground/50">{isArray ? "]" : "}"}</div>
+      <div className="font-mono text-xs text-muted">{isArray ? "]" : "}"}</div>
     </div>
   );
 }
@@ -193,7 +193,7 @@ export function JsonTreeViewFromText({ body }: { body: string }) {
   }
 
   return (
-    <pre className="rounded-md border border-white/10 bg-background p-3 font-mono text-xs leading-relaxed text-foreground whitespace-pre-wrap break-words">
+    <pre className="rounded-md border border-border bg-background p-3 font-mono text-xs leading-relaxed text-foreground whitespace-pre-wrap break-words">
       {body}
     </pre>
   );

@@ -74,17 +74,17 @@ export function ProjectSettingsModal({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-overlay p-4"
       role="dialog"
       aria-modal="true"
       aria-labelledby="project-settings-title"
       onClick={onClose}
     >
       <div
-        className="flex max-h-[90vh] w-full max-w-lg flex-col rounded-lg border border-white/10 bg-surface shadow-xl"
+        className="flex max-h-[90vh] w-full max-w-lg flex-col rounded-lg border border-border bg-surface shadow-xl"
         onClick={(e) => e.stopPropagation()}
       >
-        <header className="flex items-center justify-between border-b border-white/10 px-4 py-3">
+        <header className="flex items-center justify-between border-b border-border px-4 py-3">
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2">
               <Settings className="size-4 shrink-0 text-accent" aria-hidden />
@@ -99,15 +99,15 @@ export function ProjectSettingsModal({
                   : t("projectSettings.title")}
               </h2>
             </div>
-            <p className="mt-0.5 truncate pl-6 text-xs text-foreground/50">
+            <p className="mt-0.5 truncate pl-6 text-xs text-muted">
               {project.title}
-              <span className="font-mono text-foreground/35"> · v{project.version}</span>
+              <span className="font-mono text-subtle"> · v{project.version}</span>
             </p>
           </div>
           <button
             type="button"
             onClick={onClose}
-            className="shrink-0 rounded p-1 text-foreground/50 hover:bg-background/60 hover:text-foreground"
+            className="shrink-0 rounded p-1 text-muted hover:bg-background/60 hover:text-foreground"
             aria-label={t("projectSettings.close")}
           >
             <X className="size-4" />
@@ -126,16 +126,16 @@ export function ProjectSettingsModal({
           ) : (
             <>
               <section className="flex flex-col gap-2">
-                <div className="flex items-center gap-1.5 text-xs font-medium text-foreground/70">
+                <div className="flex items-center gap-1.5 text-xs font-medium text-muted">
                   <Globe className="size-3.5 text-accent" aria-hidden />
                   {t("projectSettings.environmentsHeading")}
                 </div>
-                <p className="text-xs leading-relaxed text-foreground/45">
+                <p className="text-xs leading-relaxed text-muted">
                   {t("projectSettings.environmentsHint")}
                 </p>
 
                 <label className="flex flex-col gap-1">
-                  <span className="text-[10px] font-medium uppercase tracking-wider text-foreground/45">
+                  <span className="text-[10px] font-semibold uppercase tracking-wider text-muted">
                     {t("projectSettings.activeEnvironment")}
                   </span>
                   <select
@@ -143,7 +143,7 @@ export function ProjectSettingsModal({
                     onChange={(e) =>
                       onActiveEnvironmentChange(e.target.value ? e.target.value : null)
                     }
-                    className="rounded-md border border-white/10 bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-accent"
+                    className="rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-accent"
                   >
                     <option value="">{t("environments.none")}</option>
                     {environments.map((env) => (
@@ -155,15 +155,15 @@ export function ProjectSettingsModal({
                 </label>
 
                 {environments.length === 0 ? (
-                  <p className="rounded-md bg-background/50 px-3 py-2 text-xs text-foreground/40">
+                  <p className="rounded-md bg-panel px-3 py-2 text-xs text-muted">
                     {t("projectSettings.noEnvironments")}
                   </p>
                 ) : (
-                  <ul className="overflow-hidden rounded-md border border-white/10">
+                  <ul className="overflow-hidden rounded-md border border-border">
                     {environments.map((env) => (
                       <li
                         key={env.id}
-                        className="flex items-center gap-1 border-b border-white/5 px-2 py-1.5 last:border-b-0"
+                        className="flex items-center gap-1 border-b border-border/60 px-2 py-1.5 last:border-b-0"
                       >
                         <span className="min-w-0 flex-1 truncate text-sm text-foreground">
                           {env.name}
@@ -171,7 +171,7 @@ export function ProjectSettingsModal({
                         <button
                           type="button"
                           onClick={() => setEditorTarget(env)}
-                          className="shrink-0 rounded px-2 py-1 text-[10px] text-foreground/60 hover:bg-background/60 hover:text-accent"
+                          className="shrink-0 rounded px-2 py-1 text-[10px] text-muted hover:bg-background/60 hover:text-accent"
                         >
                           {t("projectSettings.editEnvironment")}
                         </button>
@@ -180,7 +180,7 @@ export function ProjectSettingsModal({
                           onClick={() => onCopyEnvironment(env)}
                           title={t("projectSettings.copyEnvironment")}
                           aria-label={t("projectSettings.copyEnvironment")}
-                          className="shrink-0 rounded p-1.5 text-foreground/40 hover:bg-background/60 hover:text-foreground"
+                          className="shrink-0 rounded p-1.5 text-subtle hover:bg-background/60 hover:text-foreground"
                         >
                           <Copy className="size-3.5" aria-hidden />
                         </button>
@@ -189,7 +189,7 @@ export function ProjectSettingsModal({
                           onClick={() => handleDeleteEnvironment(env.id, env.name)}
                           title={t("projectSettings.deleteEnvironment")}
                           aria-label={t("projectSettings.deleteEnvironment")}
-                          className="shrink-0 rounded p-1.5 text-foreground/40 hover:bg-red-500/10 hover:text-red-300"
+                          className="shrink-0 rounded p-1.5 text-subtle hover:bg-red-500/10 hover:text-red-300"
                         >
                           <Trash2 className="size-3.5" aria-hidden />
                         </button>
@@ -201,27 +201,27 @@ export function ProjectSettingsModal({
                 <button
                   type="button"
                   onClick={() => setEditorTarget(null)}
-                  className="inline-flex items-center justify-center gap-2 rounded-md border border-dashed border-white/15 px-3 py-2 text-xs font-medium text-foreground/70 transition-colors hover:border-accent/40 hover:text-accent"
+                  className="inline-flex items-center justify-center gap-2 rounded-md border border-dashed border-border px-3 py-2 text-xs font-medium text-muted transition-colors hover:border-accent/40 hover:text-accent"
                 >
                   <Plus className="size-3.5" aria-hidden />
                   {t("projectSettings.createEnvironment")}
                 </button>
               </section>
 
-              <section className="flex flex-col gap-2 border-t border-white/10 pt-4">
+              <section className="flex flex-col gap-2 border-t border-border pt-4">
                 <TokenVaultSection projectId={project.id} />
               </section>
 
-              <section className="flex flex-col gap-2 border-t border-white/10 pt-4">
-                <span className="text-[10px] font-medium uppercase tracking-wider text-foreground/45">
+              <section className="flex flex-col gap-2 border-t border-border pt-4">
+                <span className="text-[10px] font-semibold uppercase tracking-wider text-muted">
                   {t("projectSettings.projectActions")}
                 </span>
                 <button
                   type="button"
                   onClick={onCopyProject}
-                  className="inline-flex items-center gap-2 rounded-md border border-white/10 px-3 py-2 text-left text-xs text-foreground/80 transition-colors hover:bg-background/60"
+                  className="inline-flex items-center gap-2 rounded-md border border-border px-3 py-2 text-left text-xs text-foreground transition-colors hover:bg-background/60"
                 >
-                  <Copy className="size-3.5 text-foreground/50" aria-hidden />
+                  <Copy className="size-3.5 text-muted" aria-hidden />
                   {t("projectSettings.copyProject")}
                 </button>
                 <button

@@ -34,17 +34,17 @@ export function CurlImportModal({ onClose, onImported }: CurlImportModalProps) {
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-overlay p-4"
       role="dialog"
       aria-modal="true"
       aria-labelledby="curl-import-title"
       onClick={onClose}
     >
       <div
-        className="flex w-full max-w-2xl flex-col rounded-lg border border-white/10 bg-surface shadow-xl"
+        className="flex w-full max-w-2xl flex-col rounded-lg border border-border bg-surface shadow-xl"
         onClick={(e) => e.stopPropagation()}
       >
-        <header className="flex items-center justify-between border-b border-white/10 px-4 py-3">
+        <header className="flex items-center justify-between border-b border-border px-4 py-3">
           <div className="flex items-center gap-2">
             <Terminal className="size-4 text-accent" aria-hidden />
             <h2
@@ -57,7 +57,7 @@ export function CurlImportModal({ onClose, onImported }: CurlImportModalProps) {
           <button
             type="button"
             onClick={onClose}
-            className="rounded p-1 text-foreground/50 hover:bg-background/60 hover:text-foreground"
+            className="rounded p-1 text-muted hover:bg-background/60 hover:text-foreground"
             aria-label={t("curlImport.close")}
           >
             <X className="size-4" />
@@ -65,10 +65,10 @@ export function CurlImportModal({ onClose, onImported }: CurlImportModalProps) {
         </header>
 
         <form onSubmit={handleImport} className="flex flex-col gap-3 p-4">
-          <p className="text-xs text-foreground/50">{t("curlImport.hint")}</p>
+          <p className="text-xs text-muted">{t("curlImport.hint")}</p>
 
           <label className="flex flex-col gap-1">
-            <span className="text-xs font-medium text-foreground/70">
+            <span className="text-xs font-medium text-muted">
               {t("curlImport.label")}
             </span>
             <textarea
@@ -79,7 +79,7 @@ export function CurlImportModal({ onClose, onImported }: CurlImportModalProps) {
               rows={10}
               autoFocus
               spellCheck={false}
-              className="min-h-48 resize-y rounded-md border border-white/10 bg-background px-3 py-2 font-mono text-xs leading-relaxed text-foreground outline-none focus:border-accent"
+              className="min-h-48 resize-y rounded-md border border-border bg-background px-3 py-2 font-mono text-xs leading-relaxed text-foreground outline-none focus:border-accent"
             />
           </label>
 
@@ -94,14 +94,14 @@ export function CurlImportModal({ onClose, onImported }: CurlImportModalProps) {
               type="button"
               onClick={onClose}
               disabled={importing}
-              className="rounded-md border border-white/10 px-4 py-2 text-sm text-foreground/70 hover:bg-background/60 disabled:opacity-50"
+              className="rounded-md border border-border px-4 py-2 text-sm text-muted hover:bg-background/60 disabled:opacity-50"
             >
               {t("curlImport.cancel")}
             </button>
             <button
               type="submit"
               disabled={importing || !curlInput.trim()}
-              className="inline-flex items-center gap-2 rounded-md bg-accent px-4 py-2 text-sm font-medium text-background disabled:cursor-not-allowed disabled:opacity-50"
+              className="inline-flex items-center gap-2 rounded-md bg-accent px-4 py-2 text-sm font-medium text-accent-foreground disabled:cursor-not-allowed disabled:opacity-50"
             >
               {importing && <Loader2 className="size-4 animate-spin" />}
               {importing ? t("curlImport.importing") : t("curlImport.import")}

@@ -16,7 +16,7 @@ function methodBadgeColor(method: string): string {
     case "POST":
       return "text-warning";
     default:
-      return "text-foreground/70";
+      return "text-muted";
   }
 }
 
@@ -58,7 +58,7 @@ export function ProjectsList({
       </button>
 
       {projects.length === 0 ? (
-        <p className="rounded-md bg-background/50 px-3 py-2 text-xs text-foreground/40">
+        <p className="rounded-md bg-panel px-3 py-2 text-xs text-muted">
           {t("sidebar.projectsEmpty")}
         </p>
       ) : (
@@ -74,9 +74,9 @@ export function ProjectsList({
                     className="flex min-w-0 flex-1 items-center gap-1.5 px-2 py-2 text-left text-xs font-medium text-foreground hover:bg-background/60"
                   >
                     {isOpen ? (
-                      <ChevronDown className="size-3.5 shrink-0 text-foreground/50" />
+                      <ChevronDown className="size-3.5 shrink-0 text-muted" />
                     ) : (
-                      <ChevronRight className="size-3.5 shrink-0 text-foreground/50" />
+                      <ChevronRight className="size-3.5 shrink-0 text-muted" />
                     )}
                     <span
                       className="min-w-0 flex-1 truncate"
@@ -84,7 +84,7 @@ export function ProjectsList({
                     >
                       {project.title}
                     </span>
-                    <span className="shrink-0 font-mono text-[10px] text-foreground/40">
+                    <span className="shrink-0 font-mono text-[10px] text-muted">
                       v{project.version}
                     </span>
                   </button>
@@ -136,7 +136,7 @@ export function ProjectsList({
                             >
                               {endpoint.method}
                             </span>
-                            <span className="min-w-0 flex-1 truncate text-xs text-foreground/80">
+                            <span className="min-w-0 flex-1 truncate text-xs text-foreground">
                               {label}
                             </span>
                           </button>

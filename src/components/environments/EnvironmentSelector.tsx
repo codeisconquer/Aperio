@@ -23,16 +23,16 @@ export function EnvironmentSelector({
   const active = environments.find((env) => env.id === activeId) ?? null;
 
   return (
-    <div className="border-b border-white/10 px-3 py-3">
+    <div className="border-b border-border px-3 py-3">
       <label
         htmlFor="environment-select"
-        className="mb-1.5 flex items-center gap-1.5 text-[10px] font-medium uppercase tracking-wider text-foreground/50"
+        className="mb-1.5 flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider text-muted"
       >
         <Globe className="size-3" aria-hidden />
         {t("environments.label")}
       </label>
       {!projectSelected ? (
-        <p className="text-[11px] leading-relaxed text-foreground/45">
+        <p className="text-[11px] leading-relaxed text-muted">
           {t("environments.selectProjectFirst")}
         </p>
       ) : (
@@ -43,7 +43,7 @@ export function EnvironmentSelector({
             onChange={(e) =>
               onActiveChange(e.target.value ? e.target.value : null)
             }
-            className="min-w-0 flex-1 truncate rounded-md border border-white/10 bg-background px-2 py-1.5 text-xs text-foreground outline-none focus:border-accent"
+            className="min-w-0 flex-1 truncate rounded-md border border-border bg-background px-2 py-1.5 text-xs text-foreground outline-none focus:border-accent"
           >
             <option value="">{t("environments.none")}</option>
             {environments.map((env) => (
@@ -56,7 +56,7 @@ export function EnvironmentSelector({
             type="button"
             onClick={onCreate}
             title={t("environments.create")}
-            className="shrink-0 rounded-md border border-white/10 bg-background p-1.5 text-foreground/60 transition-colors hover:border-accent/40 hover:text-accent"
+            className="shrink-0 rounded-md border border-border bg-background p-1.5 text-muted transition-colors hover:border-accent/40 hover:text-accent"
           >
             <Plus className="size-3.5" aria-hidden />
           </button>
@@ -65,7 +65,7 @@ export function EnvironmentSelector({
             onClick={() => active && onEdit(active)}
             disabled={!active}
             title={t("environments.edit")}
-            className="shrink-0 rounded-md border border-white/10 bg-background p-1.5 text-foreground/60 transition-colors hover:border-accent/40 hover:text-accent disabled:cursor-not-allowed disabled:opacity-40"
+            className="shrink-0 rounded-md border border-border bg-background p-1.5 text-muted transition-colors hover:border-accent/40 hover:text-accent disabled:cursor-not-allowed disabled:opacity-40"
           >
             <Pencil className="size-3.5" aria-hidden />
           </button>

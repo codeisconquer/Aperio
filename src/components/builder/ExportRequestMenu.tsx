@@ -88,7 +88,7 @@ export function ExportRequestMenu({ draft, disabled }: ExportRequestMenuProps) {
           disabled={disabled || loading}
           onClick={() => setOpen((value) => !value)}
           title={t("export.open")}
-          className="inline-flex items-center gap-1.5 rounded-md border border-white/10 bg-surface px-3 py-2 text-xs font-medium text-foreground/80 transition-colors hover:border-accent/40 hover:text-accent disabled:cursor-not-allowed disabled:opacity-50"
+          className="inline-flex items-center gap-1.5 rounded-md border border-border bg-surface px-3 py-2 text-xs font-medium text-foreground transition-colors hover:border-accent/40 hover:text-accent disabled:cursor-not-allowed disabled:opacity-50"
         >
           {loading ? (
             <Loader2 className="size-3.5 animate-spin" aria-hidden />
@@ -104,7 +104,7 @@ export function ExportRequestMenu({ draft, disabled }: ExportRequestMenuProps) {
         {open && (
           <div
             role="menu"
-            className="absolute right-0 top-full z-20 mt-1 min-w-56 overflow-hidden rounded-md border border-white/10 bg-surface py-1 shadow-lg"
+            className="absolute right-0 top-full z-20 mt-1 min-w-56 overflow-hidden rounded-md border border-border bg-surface py-1 shadow-lg"
           >
             <button
               type="button"
@@ -124,7 +124,7 @@ export function ExportRequestMenu({ draft, disabled }: ExportRequestMenuProps) {
             >
               {t("export.copyWget")}
             </button>
-            <div className="my-1 border-t border-white/10" />
+            <div className="my-1 border-t border-border" />
             <button
               type="button"
               role="menuitem"

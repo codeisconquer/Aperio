@@ -10,6 +10,7 @@ interface KeyValueTableProps {
   keyPlaceholder?: string;
   valuePlaceholder?: string;
   highlightVariables?: boolean;
+  environmentVariables?: Record<string, string>;
 }
 
 export function KeyValueTable({
@@ -18,6 +19,7 @@ export function KeyValueTable({
   keyPlaceholder,
   valuePlaceholder,
   highlightVariables = false,
+  environmentVariables,
 }: KeyValueTableProps) {
   const { t } = useTranslation();
 
@@ -34,10 +36,10 @@ export function KeyValueTable({
   }
 
   return (
-    <div className="overflow-hidden rounded-md border border-white/10">
+    <div className="overflow-hidden rounded-md border border-border">
       <table className="w-full border-collapse text-xs">
         <thead>
-          <tr className="border-b border-white/10 bg-background/40 text-left text-foreground/50">
+          <tr className="border-b border-border bg-panel text-left text-muted">
             <th className="px-2 py-1.5 font-medium">{t("builder.table.key")}</th>
             <th className="px-2 py-1.5 font-medium">
               {t("builder.table.value")}
@@ -49,13 +51,14 @@ export function KeyValueTable({
           {rows.map((row) => (
             <tr
               key={row.id}
-              className="group border-b border-white/5 last:border-b-0 hover:bg-background/30"
+              className="group border-b border-border/60 last:border-b-0 hover:bg-background/30"
             >
               <td className="px-1 py-1">
                 {highlightVariables ? (
                   <VariableInput
                     value={row.key}
                     onChange={(key) => updateRow(row.id, { key })}
+                    environmentVariables={environmentVariables}
                     placeholder={
                       keyPlaceholder ?? t("builder.table.keyPlaceholder")
                     }
@@ -77,6 +80,7 @@ export function KeyValueTable({
                   <VariableInput
                     value={row.value}
                     onChange={(value) => updateRow(row.id, { value })}
+                    environmentVariables={environmentVariables}
                     placeholder={
                       valuePlaceholder ?? t("builder.table.valuePlaceholder")
                     }

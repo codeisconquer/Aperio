@@ -5,6 +5,16 @@
   "common": {
     "clipboardUnavailable": "Zwischenablage ist nicht verfügbar"
   },
+  "theme": {
+    "label": "Darstellung",
+    "dark": "Dunkel",
+    "light": "Hell"
+  },
+  "variables": {
+    "notConfigured": "Nicht konfiguriert",
+    "pathNotSet": "Kein Wert gesetzt",
+    "configureInEnvironments": "In Projektraum-Einstellungen → Umgebungen bearbeiten"
+  },
   "environments": {
     "label": "Umgebung",
     "none": "Keine Umgebung",
@@ -27,6 +37,7 @@
     "empty": "Noch keine Requests",
     "projectsEmpty": "Projektraum importieren, um Endpunkte aus OpenAPI, Serverless oder Postman zu laden",
     "importWorkspace": "Projektraum importieren",
+    "newRequest": "Neuer Request",
     "deleteHistoryEntry": "Eintrag löschen",
     "clearHistory": "Verlauf leeren",
     "confirmClearHistory": "Gesamten Request-Verlauf unwiderruflich löschen?",
@@ -73,7 +84,28 @@
     "loading": "Projektraum wird geladen…",
     "back": "Zurück",
     "usePetstoreExample": "Beispiel: Petstore (OpenAPI 3)",
-    "formatsHint": "Serverless und Postman Collection (*.json) nur per Dateiimport. URL-Import nur für OpenAPI 3.x. Swagger 2.0 wird nicht unterstützt."
+    "formatsHint": "Serverless und Postman Collection (*.json) nur per Dateiimport. URL-Import nur für OpenAPI 3.x. Swagger 2.0 wird nicht unterstützt.",
+    "wizard": {
+      "progress": "Import-Fortschritt",
+      "stepSource": "Quelle",
+      "stepPreview": "Übersicht",
+      "stepEnvironment": "Umgebung",
+      "next": "Weiter",
+      "finish": "Import abschließen",
+      "loadedTitle": "Projektraum geladen",
+      "loadedHint": "Im nächsten Schritt richtest du die Standard-Umgebung ein — dort legst du Variablen wie base_url fest.",
+      "projectName": "Name",
+      "projectVersion": "Version",
+      "endpointCount": "Endpunkte",
+      "endpointCountValue": "{{count}} Endpunkt",
+      "endpointCountValue_plural": "{{count}} Endpunkte",
+      "detectedServer": "Server aus Spec",
+      "noServer": "Kein Server definiert",
+      "baseUrlPlaceholderHint": "Die Endpoint-URLs nutzen {{base_url}} als Platzhalter. Im nächsten Schritt kannst du den Wert anpassen.",
+      "environmentTitle": "Standard-Umgebung einrichten",
+      "environmentHint": "Jeder Projektraum hat eigene Umgebungen. Variablen ersetzen {{platzhalter}} in URLs, Headern und Body.",
+      "environmentOptional": "Ohne Variablen wird keine Umgebung angelegt — du kannst sie später unter Projektraum-Einstellungen hinzufügen."
+    }
   },
   "export": {
     "open": "Export",

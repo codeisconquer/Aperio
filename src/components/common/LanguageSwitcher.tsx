@@ -8,7 +8,7 @@ export function LanguageSwitcher() {
 
   return (
     <div className="flex items-center gap-2">
-      <Languages className="size-4 text-foreground/60" aria-hidden />
+      <Languages className="size-4 text-muted" aria-hidden />
       <label htmlFor="language-select" className="sr-only">
         {t("language.label")}
       </label>
@@ -16,7 +16,7 @@ export function LanguageSwitcher() {
         id="language-select"
         value={current}
         onChange={(e) => setLanguage(e.target.value as "de" | "en")}
-        className="rounded border border-white/10 bg-background px-2 py-1 text-xs text-foreground outline-none focus:border-accent"
+        className="min-w-0 flex-1 rounded border border-border bg-background px-2 py-1 text-xs text-foreground outline-none focus:border-accent"
       >
         <option value="de">{t("language.de")}</option>
         <option value="en">{t("language.en")}</option>

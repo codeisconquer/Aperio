@@ -1,5 +1,14 @@
-import { useRef, type ReactNode, type TextareaHTMLAttributes } from "react";
+import { useRef, useState, type ReactNode, type TextareaHTMLAttributes } from "react";
+import {
+  caretOffsetFromMouse,
+  caretOffsetFromMouseX,
+} from "../../lib/inputCaretOffset";
 import { PATH_PARAM_NAME_PATTERN } from "../../lib/pathParamPattern";
+import { findPlaceholderAtOffset } from "../../lib/variablePlaceholders";
+import {
+  VariableTooltip,
+  type VariableTooltipState,
+} from "./VariableTooltip";
 
 const PLACEHOLDER_RE = new RegExp(
   `\\{\\{([^}]+)\\}\\}|(?<!\\{)\\{(${PATH_PARAM_NAME_PATTERN})\\}(?!\\})`,
@@ -110,6 +119,30 @@ function renderEnvHighlightedText(text: string): ReactNode[] {
   return parts;
 }
 
+function buildTooltipState(
+  text: string,
+  offset: number,
+  clientX: number,
+  wrapperLeft: number,
+  environmentVariables?: Record<string, string>,
+  pathParamValues?: Record<string, string>,
+): VariableTooltipState | null {
+  const placeholder = findPlaceholderAtOffset(text, offset);
+  if (!placeholder) return null;
+
+  const value =
+    placeholder.kind === "env"
+      ? environmentVariables?.[placeholder.name]?.trim() || null
+      : pathParamValues?.[placeholder.name]?.trim() || null;
+
+  return {
+    kind: placeholder.kind,
+    name: placeholder.name,
+    value,
+    x: Math.max(0, clientX - wrapperLeft - 8),
+  };
+}
+
 type VariableInputProps = Omit<
   React.InputHTMLAttributes<HTMLInputElement>,
   "value" | "onChange" | "className"
@@ -118,6 +151,7 @@ type VariableInputProps = Omit<
   onChange: (value: string) => void;
   invalid?: boolean;
   pathParamValues?: Record<string, string>;
+  environmentVariables?: Record<string, string>;
   className?: string;
   inputClassName?: string;
 };
@@ -127,11 +161,14 @@ export function VariableInput({
   onChange,
   invalid = false,
   pathParamValues,
+  environmentVariables,
   className = "",
   inputClassName = "text-xs",
   ...props
 }: VariableInputProps) {
   const mirrorRef = useRef<HTMLDivElement>(null);
+  const wrapperRef = useRef<HTMLDivElement>(null);
+  const [tooltip, setTooltip] = useState<VariableTooltipState | null>(null);
 
   function syncScroll(element: HTMLInputElement) {
     if (mirrorRef.current) {
@@ -139,8 +176,30 @@ export function VariableInput({
     }
   }
 
+  function updateTooltipFromMouse(
+    element: HTMLInputElement,
+    clientX: number,
+  ) {
+    const wrapperLeft = wrapperRef.current?.getBoundingClientRect().left ?? 0;
+    const offset = caretOffsetFromMouseX(element, clientX);
+    setTooltip(
+      buildTooltipState(
+        value,
+        offset,
+        clientX,
+        wrapperLeft,
+        environmentVariables,
+        pathParamValues,
+      ),
+    );
+  }
+
   return (
-    <div className={`relative block w-full min-w-0 ${className}`}>
+    <div
+      ref={wrapperRef}
+      className={`relative block w-full min-w-0 ${className}`}
+    >
+      {tooltip && <VariableTooltip tooltip={tooltip} />}
       <div
         ref={mirrorRef}
         aria-hidden
@@ -155,6 +214,8 @@ export function VariableInput({
         aria-invalid={invalid || undefined}
         onChange={(e) => onChange(e.target.value)}
         onScroll={(e) => syncScroll(e.currentTarget)}
+        onMouseMove={(e) => updateTooltipFromMouse(e.currentTarget, e.clientX)}
+        onMouseLeave={() => setTooltip(null)}
         className={`relative block w-full min-w-0 rounded border border-transparent bg-transparent px-2 py-1 font-mono text-transparent caret-foreground outline-none selection:bg-accent/30 ${
           invalid
             ? "focus:border-red-400/70 focus:bg-red-500/5"
@@ -171,15 +232,19 @@ type VariableTextareaProps = Omit<
 > & {
   value: string;
   onChange: (value: string) => void;
+  environmentVariables?: Record<string, string>;
 };
 
 export function VariableTextarea({
   value,
   onChange,
+  environmentVariables,
   className = "",
   ...props
 }: VariableTextareaProps) {
   const mirrorRef = useRef<HTMLDivElement>(null);
+  const wrapperRef = useRef<HTMLDivElement>(null);
+  const [tooltip, setTooltip] = useState<VariableTooltipState | null>(null);
 
   function syncScroll(element: HTMLTextAreaElement) {
     if (mirrorRef.current) {
@@ -188,10 +253,30 @@ export function VariableTextarea({
     }
   }
 
+  function updateTooltipFromMouse(
+    element: HTMLTextAreaElement,
+    clientX: number,
+    clientY: number,
+  ) {
+    const wrapperLeft = wrapperRef.current?.getBoundingClientRect().left ?? 0;
+    const offset = caretOffsetFromMouse(element, clientX, clientY);
+    setTooltip(
+      buildTooltipState(
+        value,
+        offset,
+        clientX,
+        wrapperLeft,
+        environmentVariables,
+      ),
+    );
+  }
+
   return (
     <div
-      className={`relative min-h-32 flex-1 overflow-hidden rounded-md border border-white/10 bg-surface focus-within:border-accent ${className}`}
+      ref={wrapperRef}
+      className={`relative min-h-32 flex-1 overflow-hidden rounded-md border border-border bg-surface focus-within:border-accent ${className}`}
     >
+      {tooltip && <VariableTooltip tooltip={tooltip} />}
       <div
         ref={mirrorRef}
         aria-hidden
@@ -205,6 +290,10 @@ export function VariableTextarea({
         value={value}
         onChange={(e) => onChange(e.target.value)}
         onScroll={(e) => syncScroll(e.currentTarget)}
+        onMouseMove={(e) =>
+          updateTooltipFromMouse(e.currentTarget, e.clientX, e.clientY)
+        }
+        onMouseLeave={() => setTooltip(null)}
         className="absolute inset-0 h-full w-full resize-none bg-transparent px-3 py-2 font-mono text-xs leading-relaxed text-transparent caret-foreground outline-none selection:bg-accent/30"
       />
     </div>

@@ -101,18 +101,18 @@ export function EnvironmentEditorForm({
       <button
         type="button"
         onClick={onCancel}
-        className="inline-flex w-fit items-center gap-1.5 text-xs text-foreground/55 transition-colors hover:text-accent"
+        className="inline-flex w-fit items-center gap-1.5 text-xs text-muted transition-colors hover:text-accent"
       >
         <ArrowLeft className="size-3.5" aria-hidden />
         {t("projectSettings.backToEnvironments")}
       </button>
 
-      <p className="text-xs leading-relaxed text-foreground/45">
+      <p className="text-xs leading-relaxed text-muted">
         {t("environments.hint")}
       </p>
 
       <label className="flex flex-col gap-1">
-        <span className="text-xs font-medium text-foreground/70">
+        <span className="text-xs font-medium text-muted">
           {t("environments.nameLabel")}
         </span>
         <input
@@ -120,12 +120,12 @@ export function EnvironmentEditorForm({
           value={name}
           onChange={(e) => setName(e.target.value)}
           placeholder={t("environments.namePlaceholder")}
-          className="rounded-md border border-white/10 bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-accent"
+          className="rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-accent"
         />
       </label>
 
       <div className="flex flex-col gap-2">
-        <span className="text-xs font-medium text-foreground/70">
+        <span className="text-xs font-medium text-muted">
           {t("environments.variablesLabel")}
         </span>
         <KeyValueTable rows={rows} onChange={setRows} highlightVariables />
@@ -141,7 +141,7 @@ export function EnvironmentEditorForm({
         <button
           type="submit"
           disabled={saving || !name.trim()}
-          className="inline-flex flex-1 items-center justify-center gap-2 rounded-md bg-accent px-3 py-2 text-sm font-medium text-background disabled:cursor-not-allowed disabled:opacity-50"
+          className="inline-flex flex-1 items-center justify-center gap-2 rounded-md bg-accent px-3 py-2 text-sm font-medium text-accent-foreground disabled:cursor-not-allowed disabled:opacity-50"
         >
           {saving && <Loader2 className="size-4 animate-spin" />}
           {t("environments.save")}

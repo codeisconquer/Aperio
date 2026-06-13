@@ -47,15 +47,15 @@ export function WorkspaceSettings({ onImported }: WorkspaceSettingsProps) {
   }
 
   return (
-    <div className="flex flex-col gap-2 border-t border-white/10 pt-3">
-      <p className="px-1 text-xs font-medium uppercase tracking-wider text-foreground/50">
+    <div className="flex flex-col gap-2 border-t border-border pt-3">
+      <p className="px-1 text-xs font-semibold uppercase tracking-wider text-muted">
         {t("settings.title")}
       </p>
       <button
         type="button"
         onClick={() => void handleExport()}
         disabled={exporting || importing}
-        className="inline-flex items-center justify-center gap-2 rounded-md border border-white/10 bg-background/60 px-3 py-2 text-xs text-foreground hover:bg-background disabled:opacity-50"
+        className="inline-flex items-center justify-center gap-2 rounded-md border border-border bg-background/60 px-3 py-2 text-xs text-foreground hover:bg-background disabled:opacity-50"
       >
         {exporting ? (
           <Loader2 className="size-3.5 animate-spin" />
@@ -68,7 +68,7 @@ export function WorkspaceSettings({ onImported }: WorkspaceSettingsProps) {
         type="button"
         onClick={() => void handleImport()}
         disabled={exporting || importing}
-        className="inline-flex items-center justify-center gap-2 rounded-md border border-white/10 bg-background/60 px-3 py-2 text-xs text-foreground hover:bg-background disabled:opacity-50"
+        className="inline-flex items-center justify-center gap-2 rounded-md border border-border bg-background/60 px-3 py-2 text-xs text-foreground hover:bg-background disabled:opacity-50"
       >
         {importing ? (
           <Loader2 className="size-3.5 animate-spin" />

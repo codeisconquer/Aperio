@@ -23,7 +23,7 @@ export function CollapsibleSection({
       <button
         type="button"
         onClick={() => setOpen((value) => !value)}
-        className="mb-2 flex w-full items-center gap-2 rounded-md px-1 py-1 text-left text-xs font-medium uppercase tracking-wider text-foreground/50 transition-colors hover:text-foreground/80"
+        className="mb-2 flex w-full items-center gap-2 rounded-md px-1 py-1 text-left text-xs font-semibold uppercase tracking-wider text-muted transition-colors hover:text-foreground"
       >
         {open ? (
           <ChevronDown className="size-3.5 shrink-0" aria-hidden />

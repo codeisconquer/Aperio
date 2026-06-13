@@ -5,6 +5,21 @@ All notable changes to Aperio are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v0.2.2] - 2026-06-13 — Import wizard, themes & UX
+
+### Added
+
+- **Import wizard** — Multi-step overlay when importing a workspace: source → overview → configure default environment (`base_url` and variables) before finishing.
+- **Variable tooltips** — Hover over `{{base_url}}` and other placeholders in URL, headers, and body to see the configured value from the active environment.
+- **New request** — Sidebar button to start an empty ad-hoc request (manual entry or cURL import) without selecting a project endpoint.
+- **Dark & light mode** — Theme toggle (moon/sun icons) in the sidebar footer; preference stored in `localStorage`.
+- **App logo** — Sidebar header shows the Aperio logo instead of a generic icon.
+
+### Changed
+
+- **Contrast & readability** — Semantic theme tokens (`muted`, `subtle`, `panel`, `border`) replace low-contrast gray-on-navy text; improved legibility in both dark and light mode.
+- **Project import** — `OpenApiImportModal` replaced by `WorkspaceImportWizard`; user-configured environment is applied on finish.
+
 ## [v0.2.1] - 2026-05-24 — URL field layout
 
 ### Fixed
@@ -124,8 +139,9 @@ First public MVP: a fast, local-first desktop API client with OpenAPI workspaces
 
 - API tokens are never stored in plaintext; encryption uses AES-GCM with a keychain-backed master key.
 
-[Unreleased]: https://github.com/codeisconquer/Aperio/compare/v0.2.1...HEAD
-[v0.2.1]: https://github.com/codeisconquer/Aperio/releases/tag/v0.2.1
+[Unreleased]: https://github.com/codeisconquer/Aperio/compare/v0.2.2...HEAD
+[v0.2.2]: https://github.com/codeisconquer/Aperio/releases/tag/v0.2.2
+[v0.2.1]: https://github.com/codeisconquer/Aperio/compare/v0.2.1...v0.2.2
 [v0.2.0]: https://github.com/codeisconquer/Aperio/compare/v0.1.7...v0.2.0
 [v0.1.7]: https://github.com/codeisconquer/Aperio/releases/tag/v0.1.7
 [v0.1.6]: https://github.com/codeisconquer/Aperio/releases/tag/v0.1.6

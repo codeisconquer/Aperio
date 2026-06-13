@@ -19,10 +19,10 @@ export function PathParamsTable({
   }
 
   return (
-    <div className="overflow-hidden rounded-md border border-white/10">
+    <div className="overflow-hidden rounded-md border border-border">
       <table className="w-full border-collapse text-xs">
         <thead>
-          <tr className="border-b border-white/10 bg-background/40 text-left text-foreground/50">
+          <tr className="border-b border-border bg-panel text-left text-muted">
             <th className="px-2 py-1.5 font-medium">{t("builder.table.key")}</th>
             <th className="px-2 py-1.5 font-medium">
               {t("builder.table.value")}
@@ -33,9 +33,9 @@ export function PathParamsTable({
           {paramNames.map((name) => (
             <tr
               key={name}
-              className="border-b border-white/5 last:border-b-0 hover:bg-background/30"
+              className="border-b border-border/60 last:border-b-0 hover:bg-background/30"
             >
-              <td className="px-3 py-1.5 font-mono text-foreground/80">{name}</td>
+              <td className="px-3 py-1.5 font-mono text-foreground">{name}</td>
               <td className="px-1 py-1">
                 <VariableInput
                   value={values[name] ?? ""}

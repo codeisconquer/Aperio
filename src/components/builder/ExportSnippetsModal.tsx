@@ -126,17 +126,17 @@ export function ExportSnippetsModal({ draft, onClose }: ExportSnippetsModalProps
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-overlay p-4"
       role="dialog"
       aria-modal="true"
       aria-labelledby="export-snippets-title"
       onClick={onClose}
     >
       <div
-        className="flex max-h-[85vh] w-full max-w-3xl flex-col rounded-lg border border-white/10 bg-surface shadow-xl"
+        className="flex max-h-[85vh] w-full max-w-3xl flex-col rounded-lg border border-border bg-surface shadow-xl"
         onClick={(e) => e.stopPropagation()}
       >
-        <header className="flex items-center justify-between border-b border-white/10 px-4 py-3">
+        <header className="flex items-center justify-between border-b border-border px-4 py-3">
           <h2
             id="export-snippets-title"
             className="text-sm font-semibold text-foreground"
@@ -146,14 +146,14 @@ export function ExportSnippetsModal({ draft, onClose }: ExportSnippetsModalProps
           <button
             type="button"
             onClick={onClose}
-            className="rounded p-1 text-foreground/50 hover:bg-background/60 hover:text-foreground"
+            className="rounded p-1 text-muted hover:bg-background/60 hover:text-foreground"
             aria-label={t("export.close")}
           >
             <X className="size-4" />
           </button>
         </header>
 
-        <div className="flex gap-1 overflow-x-auto border-b border-white/10 px-3 pt-2">
+        <div className="flex gap-1 overflow-x-auto border-b border-border px-3 pt-2">
           {TABS.map((tab) => (
             <button
               key={tab}
@@ -162,7 +162,7 @@ export function ExportSnippetsModal({ draft, onClose }: ExportSnippetsModalProps
               className={`shrink-0 rounded-t-md px-3 py-2 text-xs font-medium transition-colors ${
                 activeTab === tab
                   ? "bg-background text-accent"
-                  : "text-foreground/50 hover:text-foreground"
+                  : "text-muted hover:text-foreground"
               }`}
             >
               {tabLabel(tab, t)}
@@ -212,7 +212,7 @@ export function ExportSnippetsModal({ draft, onClose }: ExportSnippetsModalProps
                   </p>
                 )}
               </div>
-              <pre className="max-h-[50vh] flex-1 overflow-auto rounded-md border border-white/10 bg-background p-4 font-mono text-xs leading-relaxed whitespace-pre-wrap break-words text-foreground">
+              <pre className="max-h-[50vh] flex-1 overflow-auto rounded-md border border-border bg-background p-4 font-mono text-xs leading-relaxed whitespace-pre-wrap break-words text-foreground">
                 <code>{activeSnippet}</code>
               </pre>
             </>

@@ -192,7 +192,7 @@ export function RequestBuilder({
       data-testid="layout-builder"
       className="flex h-full min-w-0 flex-1 flex-col bg-background"
     >
-      <header className="flex items-center justify-between gap-2 border-b border-white/10 px-4 py-3">
+      <header className="flex items-center justify-between gap-2 border-b border-border px-4 py-3">
         <h1 className="text-sm font-semibold text-foreground">
           {t("builder.title")}
         </h1>
@@ -202,7 +202,7 @@ export function RequestBuilder({
             type="button"
             onClick={() => setCurlModalOpen(true)}
             title={t("curlImport.open")}
-            className="inline-flex items-center gap-1.5 rounded-md border border-white/10 bg-surface px-3 py-2 text-xs font-medium text-foreground/80 transition-colors hover:border-accent/40 hover:text-accent"
+            className="inline-flex items-center gap-1.5 rounded-md border border-border bg-surface px-3 py-2 text-xs font-medium text-foreground transition-colors hover:border-accent/40 hover:text-accent"
           >
             <Terminal className="size-3.5" aria-hidden />
             {t("curlImport.open")}
@@ -211,7 +211,7 @@ export function RequestBuilder({
             type="submit"
             form="request-form"
             disabled={loading}
-            className="inline-flex items-center gap-2 rounded-md bg-accent px-4 py-2 text-sm font-medium text-background transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
+            className="inline-flex items-center gap-2 rounded-md bg-accent px-4 py-2 text-sm font-medium text-accent-foreground transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
           >
             {loading ? (
               <Loader2 className="size-4 animate-spin" aria-hidden />
@@ -238,7 +238,7 @@ export function RequestBuilder({
               id="http-method"
               value={draft.method}
               onChange={(e) => update("method", e.target.value)}
-              className={`w-28 shrink-0 rounded-md border border-white/10 bg-surface px-3 py-2 text-sm font-semibold outline-none focus:border-accent ${methodColor(draft.method)}`}
+              className={`w-28 shrink-0 rounded-md border border-border bg-surface px-3 py-2 text-sm font-semibold outline-none focus:border-accent ${methodColor(draft.method)}`}
             >
               {methodOptions(draft.method).map((m) => (
                 <option key={m} value={m} className="text-foreground">
@@ -253,7 +253,7 @@ export function RequestBuilder({
               className={`min-w-0 flex-1 rounded-md border bg-surface transition-colors ${
                 showUrlError
                   ? "border-red-500/60 focus-within:border-red-400"
-                  : "border-white/10 focus-within:border-accent"
+                  : "border-border focus-within:border-accent"
               } ${urlShowResolved ? "opacity-95" : ""}`}
             >
               {urlShowResolved ? (
@@ -275,6 +275,7 @@ export function RequestBuilder({
                   spellCheck={false}
                   invalid={showUrlError}
                   pathParamValues={pathParamValues}
+                  environmentVariables={environmentVariables}
                   value={templateBaseUrl}
                   onChange={updateBaseUrl}
                   onBlur={markUrlTouched}
@@ -297,7 +298,7 @@ export function RequestBuilder({
               className={`shrink-0 rounded-md border px-2.5 py-2 transition-colors ${
                 urlShowResolved
                   ? "border-accent/50 bg-accent/15 text-accent"
-                  : "border-white/10 bg-surface text-foreground/55 hover:border-accent/40 hover:text-accent"
+                  : "border-border bg-surface text-muted hover:border-accent/40 hover:text-accent"
               }`}
             >
               {urlShowResolved ? (
@@ -324,19 +325,20 @@ export function RequestBuilder({
         </div>
 
         <fieldset className="flex flex-col gap-2">
-          <legend className="mb-1 text-xs font-medium uppercase tracking-wider text-foreground/50">
+          <legend className="mb-1 text-xs font-semibold uppercase tracking-wider text-muted">
             {t("builder.queryParams")}
           </legend>
           <KeyValueTable
             rows={queryRows}
             onChange={updateQueryRows}
             highlightVariables
+            environmentVariables={environmentVariables}
           />
         </fieldset>
 
         {effectivePathParams.length > 0 && (
           <fieldset className="flex flex-col gap-2">
-            <legend className="mb-1 text-xs font-medium uppercase tracking-wider text-foreground/50">
+            <legend className="mb-1 text-xs font-semibold uppercase tracking-wider text-muted">
               {t("builder.pathParams")}
             </legend>
             <PathParamsTable
@@ -348,23 +350,25 @@ export function RequestBuilder({
         )}
 
         <fieldset className="flex flex-col gap-2">
-          <legend className="mb-1 text-xs font-medium uppercase tracking-wider text-foreground/50">
+          <legend className="mb-1 text-xs font-semibold uppercase tracking-wider text-muted">
             {t("builder.headers")}
           </legend>
           <KeyValueTable
             rows={headerRows}
             onChange={updateHeaderRows}
             highlightVariables
+            environmentVariables={environmentVariables}
           />
         </fieldset>
 
         <fieldset className="flex flex-1 flex-col gap-2">
-          <legend className="mb-1 text-xs font-medium uppercase tracking-wider text-foreground/50">
+          <legend className="mb-1 text-xs font-semibold uppercase tracking-wider text-muted">
             {t("builder.body")}
           </legend>
           <VariableTextarea
             value={draft.body}
             onChange={(body) => update("body", body)}
+            environmentVariables={environmentVariables}
             placeholder={t("builder.bodyPlaceholder")}
             spellCheck={false}
           />

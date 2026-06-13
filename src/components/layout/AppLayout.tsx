@@ -20,12 +20,16 @@ import {
   parseEnvironmentVariables,
 } from "../../lib/substituteVariables";
 import { ProjectSettingsModal } from "../sidebar/ProjectSettingsModal";
-import { OpenApiImportModal } from "../sidebar/OpenApiImportModal";
+import { WorkspaceImportWizard } from "../sidebar/WorkspaceImportWizard";
 import {
   cloneSwaggerProject,
   environmentCopyPayload,
 } from "../../lib/projectClone";
-import { defaultEnvironmentPayload } from "../../lib/projectImport";
+import {
+  defaultEnvironmentPayload,
+  importEnvironmentPayload,
+  type WorkspaceImportResult,
+} from "../../lib/projectImport";
 import type { HttpResponse } from "../../types/http";
 import type { Environment } from "../../types/environment";
 import {
@@ -129,15 +133,24 @@ export function AppLayout() {
   }, [refreshHistory, refreshEnvironments]);
 
   const bootstrapProjectImport = useCallback(
-    async (project: SwaggerProject) => {
+    async (result: WorkspaceImportResult) => {
+      const { project, environment } = result;
       setProjects((prev) => [project, ...prev]);
 
-      const payload = defaultEnvironmentPayload(
-        project.id,
-        project.base_url,
-        t("projectSettings.defaultEnvironmentName"),
-      );
-      if (!payload) return;
+      const payload =
+        environment === undefined
+          ? defaultEnvironmentPayload(
+              project.id,
+              project.base_url,
+              t("projectSettings.defaultEnvironmentName"),
+            )
+          : environment === null
+            ? null
+            : importEnvironmentPayload(project.id, environment);
+      if (!payload) {
+        setActiveProjectId(project.id);
+        return;
+      }
 
       try {
         const saved = await saveEnvironment(payload);
@@ -160,7 +173,7 @@ export function AppLayout() {
 
     void listen<SwaggerProject>("cli-import", (event) => {
       if (cancelled) return;
-      void bootstrapProjectImport(event.payload);
+      void bootstrapProjectImport({ project: event.payload });
     }).then((fn) => {
       if (cancelled) fn();
       else unlisten = fn;
@@ -275,15 +288,24 @@ export function AppLayout() {
   );
 
   const handleOpenApiImported = useCallback(
-    (project: SwaggerProject) => {
+    (result: WorkspaceImportResult) => {
       setOpenApiImportOpen(false);
       setError(null);
-      void bootstrapProjectImport(project);
+      void bootstrapProjectImport(result);
     },
     [bootstrapProjectImport],
   );
 
   const handleCurlImported = useCallback(() => {
+    setSelectedHistoryId(null);
+    setSelectedEndpointKey(null);
+    setActiveProjectId(null);
+    setResponse(null);
+    setError(null);
+  }, []);
+
+  const handleNewRequest = useCallback(() => {
+    setDraft(emptyRequestDraft());
     setSelectedHistoryId(null);
     setSelectedEndpointKey(null);
     setActiveProjectId(null);
@@ -487,6 +509,7 @@ export function AppLayout() {
           onHistorySelect={handleHistorySelect}
           onHistoryDelete={handleHistoryDelete}
           onHistoryClearAll={handleHistoryClearAll}
+          onNewRequest={handleNewRequest}
           projects={projects}
           selectedEndpointKey={selectedEndpointKey}
           onOpenOpenApiImport={() => setOpenApiImportOpen(true)}
@@ -537,7 +560,7 @@ export function AppLayout() {
       )}
 
       {openApiImportOpen && (
-        <OpenApiImportModal
+        <WorkspaceImportWizard
           onClose={() => setOpenApiImportOpen(false)}
           onImported={handleOpenApiImported}
         />

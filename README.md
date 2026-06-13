@@ -225,10 +225,10 @@ Version tags trigger multi-platform builds and GitHub Release assets:
 
 ```bash
 # Align version in package.json, src-tauri/Cargo.toml, and src-tauri/tauri.conf.json
-# See docs/RELEASE_v0.2.1.md (rename per version) for checklist and release notes
-git tag v0.2.1
+# See docs/RELEASE_v0.2.2.md (rename per version) for checklist and release notes
+git tag v0.2.2
 git push origin main
-git push origin v0.2.1
+git push origin v0.2.2
 ```
 
 The [Release workflow](.github/workflows/release.yml) attaches `.dmg`, `.app.tar.gz` (macOS), `.msi`/`.exe`, and `.AppImage`/`.deb` to the release page.

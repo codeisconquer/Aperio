@@ -9,7 +9,7 @@ function methodBadgeColor(method: string): string {
     case "POST":
       return "text-warning";
     default:
-      return "text-foreground/70";
+      return "text-muted";
   }
 }
 
@@ -17,7 +17,7 @@ function statusColor(status: number): string {
   if (status >= 200 && status < 300) return "text-success";
   if (status >= 400 && status < 500) return "text-warning";
   if (status >= 500) return "text-red-400";
-  return "text-foreground/50";
+  return "text-muted";
 }
 
 function formatTimestamp(timestamp: string, locale: string): string {
@@ -56,7 +56,7 @@ export function HistoryList({
 
   if (entries.length === 0) {
     return (
-      <p className="rounded-md bg-background/50 px-3 py-2 text-xs text-foreground/40">
+      <p className="rounded-md bg-panel px-3 py-2 text-xs text-muted">
         {t("sidebar.empty")}
       </p>
     );
@@ -68,7 +68,7 @@ export function HistoryList({
         <button
           type="button"
           onClick={onClearAll}
-          className="text-[10px] font-medium text-foreground/45 transition-colors hover:text-red-300"
+          className="text-[10px] font-medium text-muted transition-colors hover:text-red-300"
         >
           {t("sidebar.clearHistory")}
         </button>
@@ -100,12 +100,12 @@ export function HistoryList({
                   </span>
                 </div>
                 <p
-                  className="mt-1 truncate font-mono text-xs text-foreground/80"
+                  className="mt-1 truncate font-mono text-xs text-foreground"
                   title={entry.url}
                 >
                   {truncateUrl(entry.url)}
                 </p>
-                <p className="mt-0.5 text-[10px] text-foreground/40">
+                <p className="mt-0.5 text-[10px] text-muted">
                   {formatTimestamp(entry.timestamp, locale)} · {entry.duration_ms}
                   {t("response.ms")}
                 </p>
@@ -115,7 +115,7 @@ export function HistoryList({
                 onClick={() => onDelete(entry.id)}
                 title={t("sidebar.deleteHistoryEntry")}
                 aria-label={t("sidebar.deleteHistoryEntry")}
-                className="shrink-0 self-center rounded p-1.5 text-foreground/40 transition-colors hover:bg-red-500/10 hover:text-red-300"
+                className="shrink-0 self-center rounded p-1.5 text-subtle transition-colors hover:bg-red-500/10 hover:text-red-300"
               >
                 <Trash2 className="size-3.5" aria-hidden />
               </button>

@@ -12,7 +12,7 @@
 #   shasum -a 256 aperio-aarch64.app.tar.gz
 
 cask "aperio" do
-  version "0.2.1"
+  version "0.2.2"
 
   on_arm do
     sha256 "UPDATE_ME_ARM64_SHA256"

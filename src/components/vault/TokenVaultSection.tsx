@@ -85,14 +85,14 @@ export function TokenVaultSection({
 
   return (
     <form onSubmit={handleSave} className="flex flex-col gap-2">
-      <div className="flex items-center gap-1.5 text-xs font-medium text-foreground/70">
+      <div className="flex items-center gap-1.5 text-xs font-medium text-muted">
         <KeyRound className="size-3.5 text-warning" aria-hidden />
         {t("projectSettings.authHeading")}
       </div>
-      <p className="text-xs leading-relaxed text-foreground/45">{t("vault.hint")}</p>
+      <p className="text-xs leading-relaxed text-muted">{t("vault.hint")}</p>
 
       <label className="flex flex-col gap-1">
-        <span className="text-[10px] font-medium uppercase tracking-wider text-foreground/45">
+        <span className="text-[10px] font-semibold uppercase tracking-wider text-muted">
           {t("vault.tokenLabel")}
         </span>
         <input
@@ -101,7 +101,7 @@ export function TokenVaultSection({
           onChange={(e) => setToken(e.target.value)}
           placeholder={t("vault.tokenPlaceholder")}
           autoComplete="off"
-          className="rounded-md border border-white/10 bg-background px-3 py-2 font-mono text-sm text-foreground outline-none focus:border-accent"
+          className="rounded-md border border-border bg-background px-3 py-2 font-mono text-sm text-foreground outline-none focus:border-accent"
         />
       </label>
 
@@ -119,7 +119,7 @@ export function TokenVaultSection({
         <button
           type="submit"
           disabled={saving || !token.trim()}
-          className="inline-flex flex-1 items-center justify-center gap-2 rounded-md bg-accent px-3 py-2 text-xs font-medium text-background disabled:cursor-not-allowed disabled:opacity-50"
+          className="inline-flex flex-1 items-center justify-center gap-2 rounded-md bg-accent px-3 py-2 text-xs font-medium text-accent-foreground disabled:cursor-not-allowed disabled:opacity-50"
         >
           {saving && <Loader2 className="size-3.5 animate-spin" aria-hidden />}
           {t("vault.save")}

@@ -39,17 +39,17 @@ export function EnvironmentModal({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-overlay p-4"
       role="dialog"
       aria-modal="true"
       aria-labelledby="environment-modal-title"
       onClick={onClose}
     >
       <div
-        className="flex max-h-[90vh] w-full max-w-lg flex-col rounded-lg border border-white/10 bg-surface shadow-xl"
+        className="flex max-h-[90vh] w-full max-w-lg flex-col rounded-lg border border-border bg-surface shadow-xl"
         onClick={(e) => e.stopPropagation()}
       >
-        <header className="flex items-center justify-between border-b border-white/10 px-4 py-3">
+        <header className="flex items-center justify-between border-b border-border px-4 py-3">
           <div className="flex items-center gap-2">
             <Globe className="size-4 text-accent" aria-hidden />
             <h2
@@ -62,7 +62,7 @@ export function EnvironmentModal({
           <button
             type="button"
             onClick={onClose}
-            className="rounded p-1 text-foreground/50 hover:bg-background/60 hover:text-foreground"
+            className="rounded p-1 text-muted hover:bg-background/60 hover:text-foreground"
             aria-label={t("environments.close")}
           >
             <X className="size-4" />
